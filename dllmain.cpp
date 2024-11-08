@@ -45,8 +45,8 @@ float KeyRT = 1.0;
 int isspr = 0;
 int rd = 0;
 int sp = 0;
-int spu = 0;
 int spc = 1;
+int spq = 1;
 int TK, DS, CC;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;//0x1421211F0;
 //static void* (*effects)(void*, int, int) = (void* (*)(void*, int, int))0x140B01880;
@@ -483,27 +483,23 @@ void mian_loop() {
 		char CatCar_not_decrease_hp[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
 		char decrease_blade[] = { 0x4C,0x89,0x89,0x68,0x23,0x00,0x00 };
 		char decrease_bladelv[] = { 0x4C,0x89,0x89,0x70,0x23,0x00,0x00 };
-		char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 };
+		char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 }; 
 
 		//猫车
 		if (CC) {
-			//不掉刃
-			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3){
-				if (*offsetPtr<float>(healthoff, 0x64) <= 0.1f) {
+			if (*offsetPtr<float>(healthoff, 0x64) <= 0.1f) {
+				//不掉刃
+				if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 				}
-				else {
-					WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, decrease_blade, sizeof(decrease_blade), NULL);
-					WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, decrease_bladelv, sizeof(decrease_bladelv), NULL);
-				}
-			}
-			//不掉血上限
-			if (*offsetPtr<float>(healthoff, 0x64) <= 0.1f) {
+				//不掉血上限
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, CatCar_not_decrease_hp, sizeof(CatCar_not_decrease_hp), NULL);
 			}
 			else {
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, decrease_hp, sizeof(decrease_hp), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, decrease_blade, sizeof(decrease_blade), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, decrease_bladelv, sizeof(decrease_bladelv), NULL);
 			}
 		}
 		//血量大于0.1
@@ -519,37 +515,27 @@ void mian_loop() {
 				rd = 0;
 			}
 			//分段磨刀
-			/*if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AD || *offsetPtr<int>(actoff, 0xe9c4) == 0xC046) {
-				*offsetPtr<int>(playeroff, 0x20F8) -= sp * 37;
-			}
-			if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC1AC) {
-				sp = 0;
-				spc = 1;
-				spu = 0;
-			}
-			if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AC) {
-				if (*offsetPtr<float>(actoff, 0x10c) <= 15.f && spc != 0) {
-					spu = *offsetPtr<int>(playeroff, 0x20F8);
-					*offsetPtr<int>(playeroff, 0x20F8) += 37;
-					std::this_thread::sleep_for(std::chrono::milliseconds(16));
-					if (*offsetPtr<int>(playeroff, 0x20F8) != spu) sp++;
-					else sp = 0;
-					spc = 0;
+			if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AD || *offsetPtr<int>(actoff, 0xe9c4) == 0xC046) {
+				if (spq != 0) {
+					*offsetPtr<int>(playeroff, 0x20F8) += 30 * (4 - sp);
+					spq = 0;
+					sp = 0;
 				}
-				if (*offsetPtr<float>(actoff, 0x10c) > 15.f) spc = 1;
-			}*/
-			if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC1AC) {
-				if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC1AD && *offsetPtr<int>(actoff, 0xe9c4) != 0xC046)
-					*offsetPtr<int>(playeroff, 0x20F8) += 37 * sp;
-				sp = 0;
-				spc = 1;
+			}
+			else {
+				if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC1AC) {
+					sp = 0;
+					spc = 1;
+					spq = 1;
+				}
 			}
 			if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AC) {
-				if (*offsetPtr<float>(actoff, 0x10c) <= 15.f && spc != 0) {
+				if (*offsetPtr<float>(actoff, 0x10c) <= 15.0f && spc != 0) {
+					*offsetPtr<int>(playeroff, 0x20F8) += 30;
 					sp++;
 					spc = 0;
 				}
-				if (*offsetPtr<float>(actoff, 0x10c) > 15.f) spc = 1;
+				if (*offsetPtr<float>(actoff, 0x10c) > 15.0f) spc = 1;
 			}
 			//为太刀才生效
 			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
