@@ -47,6 +47,7 @@ int rd = 0;
 int sp = 0;
 int spc = 1;
 int spq = 1;
+int spu = 0;
 int TK, DS, CC;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;//0x1421211F0;
 //static void* (*effects)(void*, int, int) = (void* (*)(void*, int, int))0x140B01880;
@@ -506,11 +507,12 @@ void mian_loop() {
 		if (*offsetPtr<float>(healthoff, 0x64) > 0.1f) {
 			//坐骑
 			if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x298)
-				if (JoyL) {
-					rd = 1;
-					fsm_derive(1, 0x29C); 
-				}
-			if (rd && *offsetPtr<float>(actoff, 0x10c) >= 20.0f){
+				if (*offsetPtr<float>(actoff, 0x10c) <= 0.1f)
+					if (JoyL) {
+						rd = 1;
+						fsm_derive(1, 0x29C); 
+					}
+			if (rd && *offsetPtr<float>(actoff, 0x10c) >= 25.0f){
 				fsm_derive(1, 0x0F);
 				rd = 0;
 			}
@@ -523,19 +525,26 @@ void mian_loop() {
 				}
 			}
 			else {
-				if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC1AC) {
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AC) {
+					if (*offsetPtr<float>(actoff, 0x10c) <= 15.0f && spc != 0) {
+						*offsetPtr<int>(playeroff, 0x20F8) += 30;
+						sp++;
+						spc = 0;
+					}
+					if (*offsetPtr<float>(actoff, 0x10c) > 15.0f) spc = 1;
+				}
+				else if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC1AC) {
 					sp = 0;
 					spc = 1;
 					spq = 1;
+					//修复坐骑磨刀问题
+					if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x295){
+						if (*offsetPtr<int>(playeroff, 0x20F8) - spu == 30) {
+							*offsetPtr<int>(playeroff, 0x20F8) += 120;
+						}
+					}
+					spu = *offsetPtr<int>(playeroff, 0x20F8);
 				}
-			}
-			if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AC) {
-				if (*offsetPtr<float>(actoff, 0x10c) <= 15.0f && spc != 0) {
-					*offsetPtr<int>(playeroff, 0x20F8) += 30;
-					sp++;
-					spc = 0;
-				}
-				if (*offsetPtr<float>(actoff, 0x10c) > 15.0f) spc = 1;
 			}
 			//为太刀才生效
 			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
@@ -545,8 +554,8 @@ void mian_loop() {
 							if (Keys.A > 0) {
 								//可以用翻滚取消纳刀
 								if (DS) {
-									fsm_derive(3, 0x12);
 									*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
+									fsm_derive(3, 0x12);
 								}
 								else fsm_derive(1, 0x35);
 								KeyA = 1;
@@ -616,8 +625,8 @@ void mian_loop() {
 					if (*offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
 						if (Keys.RB > 0 || Keys.X > 0) {
 							//登龙派生纳刀
-							fsm_derive(1, 0xD1);
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+							fsm_derive(1, 0xD1);
 						}
 					}
 				}
