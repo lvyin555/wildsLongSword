@@ -512,7 +512,7 @@ void mian_loop() {
 						rd = 1;
 						fsm_derive(1, 0x29C); 
 					}
-			if (rd && *offsetPtr<float>(actoff, 0x10c) >= 25.0f){
+			if (rd && *offsetPtr<int>(PlayerBase, 0x6278) == 0x29C && *offsetPtr<float>(actoff, 0x10c) >= 25.0f){
 				fsm_derive(1, 0x0F);
 				rd = 0;
 			}
@@ -583,7 +583,7 @@ void mian_loop() {
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC07F ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC080 ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC165)
-						if (*offsetPtr<float>(actoff, 0x10c) <= 0.1f) {
+						if (*offsetPtr<float>(actoff, 0x10c) <= 1.0f) {
 							//修复大回旋取消后的状态问题
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
 						}
