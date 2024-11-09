@@ -48,10 +48,10 @@ int sp = 0;
 int spc = 1;
 int spq = 1;
 int spu = 0;
-int TK, DS, CC;
-static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;//0x1421211F0;
-//static void* (*effects)(void*, int, int) = (void* (*)(void*, int, int))0x140B01880;
-//142123DBF 14061770E
+int rs = 0;
+int sbl = 3;
+int TK, DS, CC, RS;
+static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
 
 void showMessage(std::string message) {
@@ -99,6 +99,7 @@ void init_json() {
 	TK = set["TK"];
 	DS = set["DS"];
 	CC = set["CC"];
+	RS = set["RS"];
 	Keys.keyset_X = X;
 	Keys.keyset_Y = Y;
 	Keys.keyset_A = A;
@@ -136,6 +137,7 @@ void load_json() {
 	set["TK"] = 0;
 	set["DS"] = 0;
 	set["CC"] = 1;
+	set["RS"] = 0;
 RESTART:
 	ifstream i(".\\nativePC\\plugins\\iai\\key_config.json");
 	ifstream f(".\\nativePC\\plugins\\iai\\config.json");
@@ -484,6 +486,8 @@ void mian_loop() {
 		char CatCar_not_decrease_hp[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
 		char decrease_blade[] = { 0x4C,0x89,0x89,0x68,0x23,0x00,0x00 };
 		char decrease_bladelv[] = { 0x4C,0x89,0x89,0x70,0x23,0x00,0x00 };
+		char decrease_bladeup[] = { 0x44,0x89,0x8A,0x88,0x23,0x00,0x00 };
+		char decrease_bladeup2[] = { 0x44,0x89,0x89,0x79,0x23,0x00,0x00 };
 		char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 }; 
 
 		//猫车
@@ -493,6 +497,8 @@ void mian_loop() {
 				if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
+					WriteProcessMemory(hprocess, (LPVOID)0x142124703, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
+					WriteProcessMemory(hprocess, (LPVOID)0x1421245C6, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 				}
 				//不掉血上限
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, CatCar_not_decrease_hp, sizeof(CatCar_not_decrease_hp), NULL);
@@ -501,6 +507,8 @@ void mian_loop() {
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, decrease_hp, sizeof(decrease_hp), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, decrease_blade, sizeof(decrease_blade), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, decrease_bladelv, sizeof(decrease_bladelv), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x142124703, decrease_bladeup, sizeof(decrease_bladeup), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1421245C6, decrease_bladeup2, sizeof(decrease_bladeup2), NULL);
 			}
 		}
 		//血量大于0.1
@@ -548,6 +556,33 @@ void mian_loop() {
 			}
 			//为太刀才生效
 			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
+				//红刃机制
+				if (RS)
+					if (*offsetPtr<int>(playeroff, 0x2370) >= 3) {
+						*offsetPtr<float>(playeroff, 0x2368) = 1;
+						*offsetPtr<float>(playeroff, 0x2388) = 1;
+						if (rs) {
+							if(*offsetPtr<int>(playeroff, 0x2cec) > 0) {
+								*offsetPtr<int>(playeroff, 0x2cec) = 0;
+								if (sbl > 0) {
+									*offsetPtr<float>(playeroff, 0x2374) += 0.2;
+									sbl -= 1;
+								}
+							}
+						}
+						else {
+						}
+						rs = 1;
+					}
+					else {
+						if (rs == 1) {
+							*offsetPtr<int>(playeroff, 0x2368) = 0;
+							*offsetPtr<float>(playeroff, 0x2378) = 0;
+							*offsetPtr<float>(playeroff, 0x2388) = 0;
+							rs = 0;
+							sbl = 3;
+						}
+					}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
