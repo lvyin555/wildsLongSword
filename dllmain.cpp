@@ -566,6 +566,8 @@ void mian_loop() {
 								*offsetPtr<int>(playeroff, 0x2cec) = 0;
 								if (sbl > 0) {
 									*offsetPtr<float>(playeroff, 0x2374) += 0.2;
+									if (*offsetPtr<float>(playeroff, 0x2374) > 1.0)
+										*offsetPtr<float>(playeroff, 0x2374) = 1;
 									sbl -= 1;
 								}
 							}
