@@ -52,6 +52,8 @@ int rs = 0;
 int sbl = 3;
 int rfs = 1;
 int fsb = 1;
+int riai = 0;
+int a = 0;
 int TK, DS, CC, RS;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
@@ -800,10 +802,21 @@ void mian_loop() {
 				//大居合开刃
 				if (*offsetPtr<BYTE>(playeroff, 0x2CED) == 1 && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463) {
 					if (*offsetPtr<float>(playeroff, 0x2d10) != 0) {
-						*offsetPtr<int>(playeroff, 0x2cec) = 1;
-						spiritBlade_LvUP(playeroff);
+						if(RS && *offsetPtr<int>(playeroff, 0x2370) >= 3) {
+							if (riai && sbl > 0) {
+								*offsetPtr<float>(playeroff, 0x2374) += 0.2;
+								sbl -= 1;
+								riai = 0;
+							}
+						}
+						else {
+							*offsetPtr<int>(playeroff, 0x2cec) = 1;
+							spiritBlade_LvUP(playeroff);
+						}
 					}
 				}
+				else
+					riai = 1;
 
 				//大居合的成功标志位判定
 				if (iai_suc == false && *offsetPtr<BYTE>(playeroff, 0x2CED) == 1 && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463)
@@ -818,25 +831,27 @@ void mian_loop() {
 						*offsetPtr<float>(playeroff, 0x2388) = 1;
 						if (rs) {
 							if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
-								//看破动作耗气
-								if (rfs) {
-									*offsetPtr<float>(playeroff, 0x2374) -= 0.2;
-									rfs = 0;
-								}
 								//看破成功回气
-								if (*offsetPtr<int>(playeroff, 0x239a)) {
+								if (*offsetPtr<BYTE>(playeroff, 0x239a) == 1) {
 									if (fsb) {
 										*offsetPtr<float>(playeroff, 0x2374) += 0.1;
 										fsb = 0;
 									}
 								}
-								else fsb = 1;
+								//看破动作耗气
+								if (rfs) {
+									*offsetPtr<float>(playeroff, 0x2374) -= 0.2;
+									rfs = 0;
+								}
 							}
-							else rfs = 1;
+							else { 
+								rfs = 1;
+								fsb = 1;
+							}
 							//开刃动作回气
-							if (*offsetPtr<int>(playeroff, 0x2cec)) {
+							if (*offsetPtr<int>(playeroff, 0x2cec) == 1 && !iai_suc) {
 								*offsetPtr<int>(playeroff, 0x2cec) = 0;
-								if (sbl > 0 && !iai_suc) {
+								if (sbl > 0) {
 									*offsetPtr<float>(playeroff, 0x2374) += 0.2;
 									sbl -= 1;
 								}
