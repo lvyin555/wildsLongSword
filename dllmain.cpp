@@ -486,11 +486,14 @@ void mian_loop() {
 		DWORD64 readByte = NULL;
 		char CatCar_not_decrease_blade[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
 		char CatCar_not_decrease_hp[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
+		char CatCar_not_decrease_sp[] = { 0x90,0x90,0x90,0x90,0x90 };
 		char decrease_blade[] = { 0x4C,0x89,0x89,0x68,0x23,0x00,0x00 };
 		char decrease_bladelv[] = { 0x4C,0x89,0x89,0x70,0x23,0x00,0x00 };
 		char decrease_bladeup[] = { 0x44,0x89,0x8A,0x88,0x23,0x00,0x00 };
 		char decrease_bladeup2[] = { 0x44,0x89,0x89,0x79,0x23,0x00,0x00 };
-		char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 }; 
+		char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 };
+		char decrease_sp[] = { 0xF3,0x0F,0x11,0x43,0x70 };
+		char decrease_sp2[] = { 0xF3,0x0F,0x11,0x43,0x74 };
 
 		//猫车
 		if (CC) {
@@ -502,11 +505,15 @@ void mian_loop() {
 					WriteProcessMemory(hprocess, (LPVOID)0x142124703, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245C6, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 				}
-				//不掉血上限
+				//不掉血耐上限
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, CatCar_not_decrease_hp, sizeof(CatCar_not_decrease_hp), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1412FDEAD, CatCar_not_decrease_sp, sizeof(CatCar_not_decrease_sp), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1412FDEB2, CatCar_not_decrease_sp, sizeof(CatCar_not_decrease_sp), NULL);
 			}
 			else {
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, decrease_hp, sizeof(decrease_hp), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1412FDEAD, decrease_sp, sizeof(decrease_sp), NULL);
+				WriteProcessMemory(hprocess, (LPVOID)0x1412FDEB2, decrease_sp2, sizeof(decrease_sp2), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, decrease_blade, sizeof(decrease_blade), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, decrease_bladelv, sizeof(decrease_bladelv), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x142124703, decrease_bladeup, sizeof(decrease_bladeup), NULL);
