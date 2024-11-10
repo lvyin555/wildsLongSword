@@ -50,6 +50,8 @@ int spq = 1;
 int spu = 0;
 int rs = 0;
 int sbl = 3;
+int rfs = 1;
+int fsb = 1;
 int TK, DS, CC, RS;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
@@ -556,33 +558,6 @@ void mian_loop() {
 			}
 			//为太刀才生效
 			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
-				//红刃机制
-				if (RS)
-					if (*offsetPtr<int>(playeroff, 0x2370) >= 3) {
-						*offsetPtr<float>(playeroff, 0x2368) = *offsetPtr<float>(playeroff, 0x2374);
-						*offsetPtr<float>(playeroff, 0x2388) = 1;
-						if (rs) {
-							if(*offsetPtr<int>(playeroff, 0x2cec) > 0) {
-								*offsetPtr<int>(playeroff, 0x2cec) = 0;
-								if (sbl > 0) {
-									*offsetPtr<float>(playeroff, 0x2374) += 0.2;
-									if (*offsetPtr<float>(playeroff, 0x2374) > 1.0)
-										*offsetPtr<float>(playeroff, 0x2374) = 1;
-									sbl -= 1;
-								}
-							}
-						}
-						rs = 1;
-					}
-					else {
-						if (rs == 1) {
-							*offsetPtr<int>(playeroff, 0x2368) = 0;
-							*offsetPtr<float>(playeroff, 0x2378) = 0;
-							*offsetPtr<float>(playeroff, 0x2388) = 0;
-							rs = 0;
-							sbl = 3;
-						}
-					}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
@@ -803,11 +778,17 @@ void mian_loop() {
 				else { input[0] = 0; input[1] = 0; }
 
 				//大居合的伤害控制
-				//-1 = 无伤害,0xE=三层气刃大居合,0xD=二层,0xC=一层,这里本可以区分,但我懒得区分
 				if (!iai_suc && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463 && *offsetPtr<int>(playeroff, 0x2d24) != 0xFFFFFFFF) {
 					*offsetPtr<int>(playeroff, 0x2d24) = 0xFFFFFFFF;
 				}
-				if (iai_suc)*offsetPtr<int>(playeroff, 0x2d24) = 0xe;
+				if (iai_suc) {
+					if(*offsetPtr<int>(playeroff, 0x2370) >= 0)
+						*offsetPtr<int>(playeroff, 0x2d24) = 0xC; 
+					if (*offsetPtr<int>(playeroff, 0x2370) >= 2)
+						*offsetPtr<int>(playeroff, 0x2d24) = 0xD;
+					if (*offsetPtr<int>(playeroff, 0x2370) >= 3)
+						*offsetPtr<int>(playeroff, 0x2d24) = 0xE;
+				}
 
 				//大居合开刃
 				if (*offsetPtr<BYTE>(playeroff, 0x2CED) == 1 && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463) {
@@ -822,6 +803,53 @@ void mian_loop() {
 					iai_suc = true;
 				else if (iai_suc == true && *offsetPtr<BYTE>(playeroff, 0x2CED) == 0 && (*offsetPtr<int>(actoff, 0xe9c4) < 49460 || *offsetPtr<int>(actoff, 0xe9c4) > 49463))
 					iai_suc = false;
+
+				//红刃机制
+				if (RS){
+					//判定刃色
+					if (*offsetPtr<int>(playeroff, 0x2370) >= 3) {
+						*offsetPtr<float>(playeroff, 0x2388) = 1;
+						if (rs) {
+							if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
+								//看破动作耗气
+								if (rfs) {
+									*offsetPtr<float>(playeroff, 0x2374) -= 0.2;
+									rfs = 0;
+								}
+								//看破成功回气
+								if (*offsetPtr<int>(playeroff, 0x239a)) {
+									if (fsb) {
+										*offsetPtr<float>(playeroff, 0x2374) += 0.1;
+										fsb = 0;
+									}
+								}
+								else fsb = 1;
+							}
+							else rfs = 1;
+							//开刃动作回气
+							if (*offsetPtr<int>(playeroff, 0x2cec)) {
+								*offsetPtr<int>(playeroff, 0x2cec) = 0;
+								if (sbl > 0 && !iai_suc) {
+									*offsetPtr<float>(playeroff, 0x2374) += 0.2;
+									sbl -= 1;
+								}
+							}
+						}
+						if (*offsetPtr<float>(playeroff, 0x2374) > 1)
+							*offsetPtr<float>(playeroff, 0x2374) = 1;
+						*offsetPtr<float>(playeroff, 0x2368) = 1;
+						rs = 1;
+					}
+					else {
+						if (rs == 1) {
+							*offsetPtr<int>(playeroff, 0x2368) = 0;
+							*offsetPtr<float>(playeroff, 0x2378) = 0;
+							*offsetPtr<float>(playeroff, 0x2388) = 0;
+							rs = 0;
+							sbl = 3;
+						}
+					}
+				}
 			}
 		}
 	}
