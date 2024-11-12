@@ -89,32 +89,66 @@ struct keyboardkeys
 } Keys;
 
 void init_json() {
-	int X = config["X"];
-	int Y = config["Y"];
-	int A = config["A"];
-	int B = config["B"];
-	int RT = config["RT"];
-	int RB = config["RB"];
-	int LT = config["LT"];
-	int LU = config["LU"];
-	int LD = config["LD"];
-	int LL = config["LL"];
-	int LR = config["LR"];
-	TK = set["TK"];
-	DS = set["DS"];
-	CC = set["CC"];
-	RS = set["RS"];
-	Keys.keyset_X = X;
-	Keys.keyset_Y = Y;
-	Keys.keyset_A = A;
-	Keys.keyset_B = B;
-	Keys.keyset_RT = RT;
-	Keys.keyset_RB = RB;
-	Keys.keyset_LT = LT;
-	Keys.keyset_LU = LU;
-	Keys.keyset_LD = LD;
-	Keys.keyset_LL = LL;
-	Keys.keyset_LR = LR;
+	try
+	{
+		int X = config["X"];
+		int Y = config["Y"];
+		int A = config["A"];
+		int B = config["B"];
+		int RT = config["RT"];
+		int RB = config["RB"];
+		int LT = config["LT"];
+		int LU = config["LU"];
+		int LD = config["LD"];
+		int LL = config["LL"];
+		int LR = config["LR"];
+		Keys.keyset_X = X;
+		Keys.keyset_Y = Y;
+		Keys.keyset_A = A;
+		Keys.keyset_B = B;
+		Keys.keyset_RT = RT;
+		Keys.keyset_RB = RB;
+		Keys.keyset_LT = LT;
+		Keys.keyset_LU = LU;
+		Keys.keyset_LD = LD;
+		Keys.keyset_LL = LL;
+		Keys.keyset_LR = LR;
+	}
+	catch (const std::exception)
+	{
+		config["Y"] = VK_LBUTTON;
+		config["A"] = VK_SPACE;
+		config["B"] = VK_RBUTTON;
+		config["X"] = 69;
+		config["RT"] = 17;
+		config["RB"] = VK_LSHIFT;
+		config["LT"] = 67;
+		config["LU"] = 87;
+		config["LD"] = 83;
+		config["LL"] = 65;
+		config["LR"] = 68;
+		ofstream myfile(".\\nativePC\\plugins\\iai\\key_config.json", fstream::out);
+		myfile << config;
+		myfile.close();
+	}
+
+	try {
+		TK = set["TK"];
+		DS = set["DS"];
+		CC = set["CC"];
+		RS = set["RS"];
+	}
+	catch (const std::exception)
+	{
+		set["TK"] = 0;
+		set["DS"] = 0;
+		set["CC"] = 1;
+		set["RS"] = 1;
+		ofstream myfile(".\\nativePC\\plugins\\iai\\config.json", fstream::out);
+		myfile << set;
+		myfile.close();
+	}
+	
 }
 
 bool dirExists(const std::string& dirName_in) {
@@ -141,7 +175,7 @@ void load_json() {
 	set["TK"] = 0;
 	set["DS"] = 0;
 	set["CC"] = 1;
-	set["RS"] = 0;
+	set["RS"] = 1;
 RESTART:
 	ifstream i(".\\nativePC\\plugins\\iai\\key_config.json");
 	ifstream f(".\\nativePC\\plugins\\iai\\config.json");
@@ -149,7 +183,6 @@ RESTART:
 		if (!dirExists(".\\nativePC\\plugins\\iai"))
 			CreateDirectory(".\\nativePC\\plugins\\iai", NULL);
 		ofstream myfile(".\\nativePC\\plugins\\iai\\key_config.json", fstream::out);
-		//myfile << "{\n\"Y\":1,\n\"B\":2,\n\"A\":32,\n\"RT\":6,\n\"RB\":160,\n\"LT\":67\n}";
 		myfile << config;
 		myfile.close();
 		goto RESTART;
@@ -161,6 +194,8 @@ RESTART:
 		i.close();
 	}
 	if (!f.is_open() || f.eof()) {
+		if (!dirExists(".\\nativePC\\plugins\\iai"))
+			CreateDirectory(".\\nativePC\\plugins\\iai", NULL);
 		ofstream myfile(".\\nativePC\\plugins\\iai\\config.json", fstream::out);
 		myfile << set;
 		myfile.close();
