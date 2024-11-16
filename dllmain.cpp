@@ -456,12 +456,29 @@ void mian_loop() {
 
 	//玩家基址
 	void* PlayerObject = *(undefined**)MH::Player::PlayerBasePlot;
+	void* text = (undefined**)MH::Player::PlayerText;
 
 	//输入缓存
 	int input[2] = { 0,0 };
 
 	//居合成功标记位
 	bool iai_suc = false;
+
+	DWORD pid;
+	HWND hwnd = FindWindow(NULL, "MONSTER HUNTER: WORLD(421810)");
+	GetWindowThreadProcessId(hwnd, &pid);
+	HANDLE hprocess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	DWORD64 readByte = NULL;
+	char CatCar_not_decrease_blade[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
+	char CatCar_not_decrease_hp[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
+	char CatCar_not_decrease_sp[] = { 0x90,0x90,0x90,0x90,0x90 };
+	char decrease_blade[] = { 0x4C,0x89,0x89,0x68,0x23,0x00,0x00 };
+	char decrease_bladelv[] = { 0x4C,0x89,0x89,0x70,0x23,0x00,0x00 };
+	char decrease_bladeup[] = { 0x44,0x89,0x8A,0x88,0x23,0x00,0x00 };
+	char decrease_bladeup2[] = { 0x44,0x89,0x89,0x79,0x23,0x00,0x00 };
+	char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 };
+	char decrease_sp[] = { 0xF3,0x0F,0x11,0x43,0x70 };
+	char decrease_sp2[] = { 0xF3,0x0F,0x11,0x43,0x74 };
 
 	while (1) {
 		//线程每秒运行60次,模拟60帧刷新
@@ -489,8 +506,12 @@ void mian_loop() {
 		if (Cameraangle == nullptr) continue;
 		void* Playangle = *offsetPtr<void*>(PlayerBase, 0x174);
 		if (Playangle == nullptr) continue;
+		void* Playtext = *offsetPtr<void*>(text, 0x948);
+		if (Playtext == nullptr) continue;
 		wepoff = *offsetPtr<void*>(wepoff, 0x8);
 		wepoff = *offsetPtr<void*>(wepoff, 0x78);
+		Playtext = *offsetPtr<void*>(Playtext, 0x580);
+		Playtext = *offsetPtr<void*>(Playtext, 0x30);
 
 		int angle = 0;
 		if ((Cameraangle > 0 && Playangle > 0) || (Cameraangle < 0 && Playangle < 0)) angle = 1;
@@ -516,21 +537,12 @@ void mian_loop() {
 		else
 			joyl_ = 0;
 
-		DWORD pid;
-		HWND hwnd = FindWindow(NULL, "MONSTER HUNTER: WORLD(421810)");
-		GetWindowThreadProcessId(hwnd, &pid);
-		HANDLE hprocess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-		DWORD64 readByte = NULL;
-		char CatCar_not_decrease_blade[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
-		char CatCar_not_decrease_hp[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
-		char CatCar_not_decrease_sp[] = { 0x90,0x90,0x90,0x90,0x90 };
-		char decrease_blade[] = { 0x4C,0x89,0x89,0x68,0x23,0x00,0x00 };
-		char decrease_bladelv[] = { 0x4C,0x89,0x89,0x70,0x23,0x00,0x00 };
-		char decrease_bladeup[] = { 0x44,0x89,0x8A,0x88,0x23,0x00,0x00 };
-		char decrease_bladeup2[] = { 0x44,0x89,0x89,0x79,0x23,0x00,0x00 };
-		char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 };
-		char decrease_sp[] = { 0xF3,0x0F,0x11,0x43,0x70 };
-		char decrease_sp2[] = { 0xF3,0x0F,0x11,0x43,0x74 };
+		char t1, t2, t3, t4, t5;
+		t1 = *offsetPtr<char>(Playtext, 0x8DB3);
+		t2 = *offsetPtr<char>(Playtext, 0x8DBA);
+		t3 = *offsetPtr<char>(Playtext, 0x8DCB);
+		t4 = *offsetPtr<char>(Playtext, 0x8DD6);
+		t5 = *offsetPtr<char>(Playtext, 0xA900);
 
 		//猫车
 		if (CC) {
@@ -559,6 +571,7 @@ void mian_loop() {
 		}
 		//血量大于0.1
 		if (*offsetPtr<float>(healthoff, 0x64) > 0.1f) {
+			//*offsetPtr<char>(Playtext, 0xA900) = t5;
 			//坐骑
 			if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x298)
 				if (*offsetPtr<float>(actoff, 0x10c) <= 0.1f)
@@ -602,6 +615,10 @@ void mian_loop() {
 			}
 			//为太刀才生效
 			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
+				//if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06C)
+					//*offsetPtr<char>(Playtext, 0xA900) = t2;
+				//else
+					//*offsetPtr<char>(Playtext, 0xA900) = t1;
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
