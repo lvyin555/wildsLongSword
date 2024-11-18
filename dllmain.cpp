@@ -623,22 +623,6 @@ void mian_loop() {
 					//*offsetPtr<char>(Playtext, 0xA900) = t2;
 				//else
 					//*offsetPtr<char>(Playtext, 0xA900) = t1;
-				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
-					if (KeyA <= 0) {
-						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
-							if (Keys.A > 0) {
-								//可以用翻滚取消纳刀
-								if (DS) {
-									*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
-									fsm_derive(3, 0x12);
-								}
-								else fsm_derive(1, 0x35);
-								KeyA = 1;
-							}
-						}
-					}
-					KeyA = Keys.A;
-				}
 				if (isspr) {
 					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06B ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC077 ||
@@ -686,8 +670,24 @@ void mian_loop() {
 					}
 					KeyA = Keys.A;
 				}
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
+					if (KeyA <= 0) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
+							if (Keys.A > 0) {
+								//可以用翻滚取消纳刀
+								if (DS) {
+									*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
+									fsm_derive(3, 0x12);
+								}
+								else fsm_derive(1, 0x35);
+								KeyA = 1;
+							}
+						}
+					}
+					KeyA = Keys.A;
+				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AC) {
-					if (*offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
+					if (*offsetPtr<float>(actoff, 0x10c) >= 35.0f && *offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
 						if (Keys.RB > 0 || Keys.X > 0) {
 							//登龙派生纳刀
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
