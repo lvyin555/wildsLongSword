@@ -574,15 +574,19 @@ void mian_loop() {
 			//*offsetPtr<char>(Playtext, 0xA900) = t5;
 			//坐骑
 			if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x298)
-				if (*offsetPtr<float>(actoff, 0x10c) <= 0.1f)
+				if (*offsetPtr<float>(actoff, 0x10c) < 0.1f)
 					if (JoyL) {
 						rd = 1;
 						fsm_derive(1, 0x29C); 
 					}
-			if (rd && *offsetPtr<int>(PlayerBase, 0x6278) == 0x29C && *offsetPtr<float>(actoff, 0x10c) >= 25.0f){
-				fsm_derive(1, 0x0F);
-				rd = 0;
+			if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x29C){
+				if (rd && *offsetPtr<float>(actoff, 0x10c) >= 25.0f){
+					fsm_derive(1, 0x0F);
+					rd = 0;
+				}
 			}
+			else if (*offsetPtr<int>(PlayerBase, 0x6278) != 0x298)
+				rd = 0;
 			//分段磨刀
 			if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AD || *offsetPtr<int>(actoff, 0xe9c4) == 0xC046) {
 				if (spq != 0) {
@@ -633,16 +637,6 @@ void mian_loop() {
 							}
 						}
 					}
-					/*if (*offsetPtr<float>(actoff, 0x10c) >= 80.0f) {
-						if (KeyRT <= 0) {
-							if (Keys.RT > 0.0) {
-								//按下RT瞬间就居合出手(修复游戏本身居合带有5帧延迟的问题)
-								fsm_derive(3, 0x66);
-								KeyRT = 1;
-							}
-						}
-					}
-					KeyRT = Keys.RT;*/
 					KeyA = Keys.A;
 				}
 				if (isspr) {
@@ -653,7 +647,7 @@ void mian_loop() {
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC067 ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC07F ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC080 ||
-						*offsetPtr<int>(actoff, 0xe9c4) == 0xC165)
+						*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AA)
 						if (*offsetPtr<float>(actoff, 0x10c) <= 1.0f) {
 							//修复大回旋取消后的状态问题
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
