@@ -54,7 +54,8 @@ int rfs = 1;
 int fsb = 1;
 int riai = 0;
 int a = 0;
-int TK, DS, CC, RS;
+int lsp = 0;
+int TK, DS, CC, RS, RE;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
 
@@ -137,6 +138,7 @@ void init_json() {
 		DS = set["DS"];
 		CC = set["CC"];
 		RS = set["RS"];
+		RE = set["RE"];
 	}
 	catch (const std::exception)
 	{
@@ -144,6 +146,7 @@ void init_json() {
 		set["DS"] = 0;
 		set["CC"] = 1;
 		set["RS"] = 1;
+		set["RE"] = 0;
 		ofstream myfile(".\\nativePC\\plugins\\iai\\config.json", fstream::out);
 		myfile << set;
 		myfile.close();
@@ -176,6 +179,7 @@ void load_json() {
 	set["DS"] = 0;
 	set["CC"] = 1;
 	set["RS"] = 1;
+	set["RE"] = 1;
 RESTART:
 	ifstream i(".\\nativePC\\plugins\\iai\\key_config.json");
 	ifstream f(".\\nativePC\\plugins\\iai\\config.json");
@@ -320,10 +324,16 @@ void GetNowKey()
 			Keys.X = Keys.X + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xC84) > 0)
-			Keys.RB = Keys.RB + 0.0166;
+			if (RE)
+				Keys.RT = Keys.RT + 0.0166;
+			else
+				Keys.RB = Keys.RB + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xC8C) > 0)
-			Keys.RT = Keys.RT + 0.0166;
+			if (RE)
+				Keys.RB = Keys.RB + 0.0166;
+			else
+				Keys.RT = Keys.RT + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xC88) > 0)
 			Keys.LT = Keys.LT + 0.0166;
@@ -472,6 +482,7 @@ void mian_loop() {
 	char CatCar_not_decrease_blade[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
 	char CatCar_not_decrease_hp[] = { 0x90,0x90,0x90,0x90,0x90,0x90,0x90,0x90 };
 	char CatCar_not_decrease_sp[] = { 0x90,0x90,0x90,0x90,0x90 };
+	char not_splvup[] = { 0x90,0x90,0x90,0x90,0x90,0x90 };
 	char decrease_blade[] = { 0x4C,0x89,0x89,0x68,0x23,0x00,0x00 };
 	char decrease_bladelv[] = { 0x4C,0x89,0x89,0x70,0x23,0x00,0x00 };
 	char decrease_bladeup[] = { 0x44,0x89,0x8A,0x88,0x23,0x00,0x00 };
@@ -479,6 +490,7 @@ void mian_loop() {
 	char decrease_hp[] = { 0xF3,0x0F,0x11,0x8F,0x28,0x76,0x00,0x00 };
 	char decrease_sp[] = { 0xF3,0x0F,0x11,0x43,0x70 };
 	char decrease_sp2[] = { 0xF3,0x0F,0x11,0x43,0x74 };
+	char splvup[] = { 0x8B,0x87,0x70,0x23,0x00,0x00 };
 
 	while (1) {
 		//线程每秒运行60次,模拟60帧刷新
@@ -639,6 +651,9 @@ void mian_loop() {
 					isspr = 0;
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06D) {
+					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
+					std::this_thread::sleep_for(std::chrono::milliseconds(2));
+					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
 					isspr = 1;
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 48.0f) {
@@ -817,6 +832,9 @@ void mian_loop() {
 				//若缓冲已有招式,并且帧数大于70帧,则派生缓冲中的招式,并清理缓冲
 				//本方式可以在60帧以后开始接受输入数据,并在70帧以后进行派生,类似游戏本身的预输入方式
 				if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
+					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
+					std::this_thread::sleep_for(std::chrono::milliseconds(2));
+					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
 					if (input[0] != 0 && input[1] != 0) {
 						fsm_derive(input[0], input[1]);
 						input[0] = 0; input[1] = 0;
@@ -873,7 +891,7 @@ void mian_loop() {
 				//红刃机制
 				if (RS){
 					//判定刃色
-					if (*offsetPtr<int>(playeroff, 0x2370) >= 3) {
+					if (*offsetPtr<int>(playeroff, 0x2370) >= 3 && lsp >= 3) {
 						*offsetPtr<float>(playeroff, 0x2388) = 1;
 						if (rs) {
 							if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
@@ -917,6 +935,7 @@ void mian_loop() {
 							sbl = 3;
 						}
 					}
+					lsp = *offsetPtr<int>(playeroff, 0x2370);
 				}
 			}
 		}
