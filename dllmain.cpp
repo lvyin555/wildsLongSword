@@ -635,6 +635,11 @@ void mian_loop() {
 					//*offsetPtr<char>(Playtext, 0xA900) = t2;
 				//else
 					//*offsetPtr<char>(Playtext, 0xA900) = t1;
+				if (lsp != *offsetPtr<int>(playeroff, 0x2370))
+					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
+				else
+					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
+				lsp = *offsetPtr<int>(playeroff, 0x2370);
 				if (isspr) {
 					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06B ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC077 ||
@@ -651,9 +656,6 @@ void mian_loop() {
 					isspr = 0;
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06D) {
-					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
-					std::this_thread::sleep_for(std::chrono::milliseconds(2));
-					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
 					isspr = 1;
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 48.0f) {
@@ -832,9 +834,6 @@ void mian_loop() {
 				//若缓冲已有招式,并且帧数大于70帧,则派生缓冲中的招式,并清理缓冲
 				//本方式可以在60帧以后开始接受输入数据,并在70帧以后进行派生,类似游戏本身的预输入方式
 				if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
-					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
-					std::this_thread::sleep_for(std::chrono::milliseconds(2));
-					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
 					if (input[0] != 0 && input[1] != 0) {
 						fsm_derive(input[0], input[1]);
 						input[0] = 0; input[1] = 0;
@@ -935,7 +934,6 @@ void mian_loop() {
 							sbl = 3;
 						}
 					}
-					lsp = *offsetPtr<int>(playeroff, 0x2370);
 				}
 			}
 		}
