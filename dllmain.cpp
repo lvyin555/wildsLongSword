@@ -635,6 +635,7 @@ void mian_loop() {
 					//*offsetPtr<char>(Playtext, 0xA900) = t2;
 				//else
 					//*offsetPtr<char>(Playtext, 0xA900) = t1;
+				//更新刃色特效
 				if (lsp != *offsetPtr<int>(playeroff, 0x2370))
 					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
 				else
@@ -817,26 +818,27 @@ void mian_loop() {
 									}
 								}
 							}
-						}
-
-						//不需要居合成功的派生
-						//若按下RB,则将快速纳刀存入缓冲
-						if (TK)
-							if (Keys.RB > 0 || Keys.X > 0) {
-								input[0] = 3;
-								input[1] = 0x6B;
+							//不需要居合成功的派生
+							//若按下RB,则将快速纳刀存入缓冲
+							if (TK) {
+								if (Keys.RB > 0 || Keys.X > 0) {
+									input[0] = 3;
+									input[1] = 0x6B;
+								}
 							}
+						}
+						KeyY = Keys.Y;
+						KeyA = Keys.A;
+						KeyRT = Keys.RT;
 					}
-					KeyY = Keys.Y;
-					KeyA = Keys.A;
-					KeyRT = Keys.RT;
-				}
-				//若缓冲已有招式,并且帧数大于70帧,则派生缓冲中的招式,并清理缓冲
-				//本方式可以在60帧以后开始接受输入数据,并在70帧以后进行派生,类似游戏本身的预输入方式
-				if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
-					if (input[0] != 0 && input[1] != 0) {
-						fsm_derive(input[0], input[1]);
-						input[0] = 0; input[1] = 0;
+
+					//若缓冲已有招式,并且帧数大于70帧,则派生缓冲中的招式,并清理缓冲
+					//本方式可以在60帧以后开始接受输入数据,并在70帧以后进行派生,类似游戏本身的预输入方式
+					if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
+						if (input[0] != 0 && input[1] != 0) {
+							fsm_derive(input[0], input[1]);
+							input[0] = 0; input[1] = 0;
+						}
 					}
 				}
 
