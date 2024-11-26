@@ -55,7 +55,7 @@ int fsb = 1;
 int riai = 0;
 int a = 0;
 int lsp = 0;
-int TK, DS, CC, RS, RE;
+int TK, DS, CC, RS, RE, LS;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
 
@@ -87,6 +87,7 @@ struct keyboardkeys
 	float LD = 0;
 	float LL = 0;
 	float LR = 0;
+	float LS = 0;
 } Keys;
 
 void init_json() {
@@ -139,6 +140,7 @@ void init_json() {
 		CC = set["CC"];
 		RS = set["RS"];
 		RE = set["RE"];
+		LS = set["LS"];
 	}
 	catch (const std::exception)
 	{
@@ -147,6 +149,7 @@ void init_json() {
 		set["CC"] = 1;
 		set["RS"] = 1;
 		set["RE"] = 0;
+		set["LS"] = 0;
 		ofstream myfile(".\\nativePC\\plugins\\iai\\config.json", fstream::out);
 		myfile << set;
 		myfile.close();
@@ -180,6 +183,7 @@ void load_json() {
 	set["CC"] = 1;
 	set["RS"] = 1;
 	set["RE"] = 1;
+	set["LS"] = 1;
 RESTART:
 	ifstream i(".\\nativePC\\plugins\\iai\\key_config.json");
 	ifstream f(".\\nativePC\\plugins\\iai\\config.json");
@@ -324,19 +328,16 @@ void GetNowKey()
 			Keys.X = Keys.X + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xC84) > 0)
-			if (RE)
-				Keys.RT = Keys.RT + 0.0166;
-			else
-				Keys.RB = Keys.RB + 0.0166;
+			Keys.RB = Keys.RB + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xC8C) > 0)
-			if (RE)
-				Keys.RB = Keys.RB + 0.0166;
-			else
-				Keys.RT = Keys.RT + 0.0166;
+			Keys.RT = Keys.RT + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xC88) > 0)
 			Keys.LT = Keys.LT + 0.0166;
+
+		if (*offsetPtr<float>(Gamepad, 0xC64) > 0)
+			Keys.LS = Keys.LS + 0.0166;
 
 		if (*offsetPtr<float>(Gamepad, 0xCA0) > 0)
 			Keys.LU = *offsetPtr<float>(Gamepad, 0xCA0);
@@ -415,6 +416,9 @@ void GetNowKey()
 
 		if (*offsetPtr<float>(Gamepad, 0xCA4) == 0 && GetAsyncKeyState(Keys.keyset_LR) == 0)
 			Keys.LR = 0;
+
+		if (*offsetPtr<float>(Gamepad, 0xC64) == 0)
+			Keys.LS = 0;
 
 		if (Keys.LU + Keys.LD + Keys.LL + Keys.LR > 0)
 			JoyL = true;
@@ -706,7 +710,7 @@ void mian_loop() {
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AC) {
 					if (*offsetPtr<float>(actoff, 0x10c) >= 35.0f && *offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
-						if (Keys.RB > 0 || Keys.X > 0) {
+						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
 							//登龙派生纳刀
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
 							fsm_derive(1, 0xD1);
@@ -715,7 +719,7 @@ void mian_loop() {
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
 					if (*offsetPtr<float>(actoff, 0x10c) >= 80.0f) {
-						if (Keys.RB > 0 || Keys.X > 0) {
+						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
 							//见切派生纳刀
 							if (JoyL)
 								fsm_derive(3, 9);
@@ -738,7 +742,7 @@ void mian_loop() {
 							//大居合成功派生
 							if (iai_suc) {
 								//若RT被按下,进入循环
-								if (Keys.RT > 0.0) {
+								if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
 									for (int RT_count = 0; RT_count < 8; RT_count++) {
 										//循环中若A被按下,则认为按下的是RT+A组合键,将纳刀存入缓冲
 										if (Keys.A > 0) {
@@ -765,7 +769,7 @@ void mian_loop() {
 								else if (Keys.A > 0) {
 									for (int A_count = 0; A_count < 8; A_count++) {
 										//循环中若RT被按下,则认为按下的是RT+A组合键,将纳刀存入缓冲
-										if (Keys.RT > 0.0) {
+										if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
 											input[0] = 3;
 											input[1] = 0x62;
 											break;
@@ -795,7 +799,7 @@ void mian_loop() {
 								else if (Keys.Y > 0) {
 									for (int Y_count = 0; Y_count < 8; Y_count++) {
 										//循环中若RT被按下,则认为按下的是RT+Y组合键
-										if (Keys.RT > 0.0) {
+										if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
 											break;
 										}
 										//每个循环有一帧延迟
@@ -821,15 +825,12 @@ void mian_loop() {
 							//不需要居合成功的派生
 							//若按下RB,则将快速纳刀存入缓冲
 							if (TK) {
-								if (Keys.RB > 0 || Keys.X > 0) {
+								if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
 									input[0] = 3;
 									input[1] = 0x6B;
 								}
 							}
 						}
-						KeyY = Keys.Y;
-						KeyA = Keys.A;
-						KeyRT = Keys.RT;
 					}
 
 					//若缓冲已有招式,并且帧数大于70帧,则派生缓冲中的招式,并清理缓冲
@@ -840,13 +841,12 @@ void mian_loop() {
 							input[0] = 0; input[1] = 0;
 						}
 					}
-				}
-
-				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC155) {
-					*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
-					if (*offsetPtr<float>(actoff, 0x10c) >= 105.0f) {
-						fsm_derive(1, 0);
-					}
+					KeyY = Keys.Y;
+					KeyA = Keys.A;
+					if (!RE)
+						KeyRT = Keys.RT;
+					else
+						KeyRT = Keys.RB;
 				}
 				//清理缓冲
 				else { input[0] = 0; input[1] = 0; }
@@ -888,6 +888,13 @@ void mian_loop() {
 					iai_suc = true;
 				else if (iai_suc == true && *offsetPtr<BYTE>(playeroff, 0x2CED) == 0 && (*offsetPtr<int>(actoff, 0xe9c4) < 49460 || *offsetPtr<int>(actoff, 0xe9c4) > 49463))
 					iai_suc = false;
+
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC155) {
+					*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+					if (*offsetPtr<float>(actoff, 0x10c) >= 105.0f) {
+						fsm_derive(1, 0);
+					}
+				}
 
 				//红刃机制
 				if (RS){
