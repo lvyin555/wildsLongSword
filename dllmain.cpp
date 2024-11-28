@@ -76,6 +76,7 @@ struct keyboardkeys
 	int keyset_LD = 83;
 	int keyset_LL = 65;
 	int keyset_LR = 68;
+	int keyset_LS = NULL;
 	float Y = 0;
 	float X = 0;
 	float B = 0;
@@ -104,6 +105,7 @@ void init_json() {
 		int LD = config["LD"];
 		int LL = config["LL"];
 		int LR = config["LR"];
+		int LS = config["LS"];
 		Keys.keyset_X = X;
 		Keys.keyset_Y = Y;
 		Keys.keyset_A = A;
@@ -115,6 +117,7 @@ void init_json() {
 		Keys.keyset_LD = LD;
 		Keys.keyset_LL = LL;
 		Keys.keyset_LR = LR;
+		Keys.keyset_LS = LS;
 	}
 	catch (const std::exception)
 	{
@@ -129,6 +132,7 @@ void init_json() {
 		config["LD"] = 83;
 		config["LL"] = 65;
 		config["LR"] = 68;
+		config["LS"] = NULL;
 		ofstream myfile(".\\nativePC\\plugins\\iai\\key_config.json", fstream::out);
 		myfile << config;
 		myfile.close();
@@ -178,6 +182,7 @@ void load_json() {
 	config["LD"] = 83;
 	config["LL"] = 65;
 	config["LR"] = 68;
+	config["LS"] = NULL;
 	set["TK"] = 0;
 	set["DS"] = 0;
 	set["CC"] = 1;
@@ -384,6 +389,9 @@ void GetNowKey()
 		if (GetAsyncKeyState(Keys.keyset_LR) < 0)
 			Keys.LR = Keys.LR + 0.0166;
 
+		if (GetAsyncKeyState(Keys.keyset_LS) < 0)
+			Keys.LS = Keys.LS + 0.0166;
+
 		if (*offsetPtr<float>(Gamepad, 0xC90) == 0 && GetAsyncKeyState(Keys.keyset_Y) == 0)
 			Keys.Y = 0;
 
@@ -417,7 +425,7 @@ void GetNowKey()
 		if (*offsetPtr<float>(Gamepad, 0xCA4) == 0 && GetAsyncKeyState(Keys.keyset_LR) == 0)
 			Keys.LR = 0;
 
-		if (*offsetPtr<float>(Gamepad, 0xC64) == 0)
+		if (*offsetPtr<float>(Gamepad, 0xC64) == 0 && GetAsyncKeyState(Keys.keyset_LS) == 0)
 			Keys.LS = 0;
 
 		if (Keys.LU + Keys.LD + Keys.LL + Keys.LR > 0)
@@ -518,10 +526,6 @@ void mian_loop() {
 		if (wepoff == nullptr) continue;
 		void* actoff = *offsetPtr<void*>(PlayerBase, 0x468);
 		if (actoff == nullptr) continue;
-		void* Cameraangle = *offsetPtr<void*>(PlayerBase, 0x7DC8);
-		if (Cameraangle == nullptr) continue;
-		void* Playangle = *offsetPtr<void*>(PlayerBase, 0x174);
-		if (Playangle == nullptr) continue;
 		void* Playtext = *offsetPtr<void*>(text, 0x948);
 		if (Playtext == nullptr) continue;
 		wepoff = *offsetPtr<void*>(wepoff, 0x8);
@@ -529,19 +533,34 @@ void mian_loop() {
 		Playtext = *offsetPtr<void*>(Playtext, 0x580);
 		Playtext = *offsetPtr<void*>(Playtext, 0x30);
 
-		int angle = 0;
-		if ((Cameraangle > 0 && Playangle > 0) || (Cameraangle < 0 && Playangle < 0)) angle = 1;
-		else if ((Cameraangle < 0 && Playangle > 0) || (Cameraangle > 0 && Playangle < 0)) angle = 0;
+		float playw = *offsetPtr<float>(PlayerBase, 0x170);
+		float playx = *offsetPtr<float>(PlayerBase, 0x174);
+		float playy = *offsetPtr<float>(PlayerBase, 0x178);
+		float playz = *offsetPtr<float>(PlayerBase, 0x17c);
+		float eulerx, eulery, eulerz;
+
+		float sinr_cosp = 2 * (playw * playx + playy * playz);
+		float cosr_cosp = 1 - 2 * (playx * playx + playy * playy);
+		eulerx = atan2(sinr_cosp, cosr_cosp);
+		float sinp = 2 * (playw * playy - playz * playx);
+		if (abs(sinp) >= 1){
+			if (sinp >= 0)
+				eulery = M_PI / 2;
+			else eulery = -M_PI / 2;
+		}
+		else
+			eulery = asin(sinp);
+		float  siny_cosp = 2 * (playw * playz + playx * playy);
+		float  cosy_cosp = 1 - 2 * (playy * playy + playz * playz);
+		eulerz = atan2(siny_cosp, cosy_cosp);
 
 		//前
 		if (Keys.LU != 0.0 && Keys.LU >= Keys.LL && Keys.LU >= Keys.LR) {
-			if (angle) joyl_ = 1;
-			else joyl_ = 4;
+			joyl_ = 1;
 		}
 		//后
 		else if (Keys.LD != 0.0 && Keys.LD >= Keys.LL && Keys.LD >= Keys.LR) {
-			if (angle) joyl_ = 4;
-			else joyl_ = 1;
+			joyl_ = 4;
 		}
 		//右
 		else if (Keys.LR > Keys.LU && Keys.LR > Keys.LD)
@@ -837,7 +856,12 @@ void mian_loop() {
 					//本方式可以在60帧以后开始接受输入数据,并在70帧以后进行派生,类似游戏本身的预输入方式
 					if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
 						if (input[0] != 0 && input[1] != 0) {
-							fsm_derive(input[0], input[1]);
+							if (input[1] == 0x13 || input[1] == 0x14 || input[1] == 0x15 || input[1] == 0x16){
+								if (*offsetPtr<float>(actoff, 0x10c) < 125.0f)
+									fsm_derive(input[0], input[1]);
+							}
+							else
+								fsm_derive(input[0], input[1]);
 							input[0] = 0; input[1] = 0;
 						}
 					}
