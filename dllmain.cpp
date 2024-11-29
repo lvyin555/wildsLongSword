@@ -456,7 +456,7 @@ void asm_edit() {
 
 	//µ¶¹â
 	char blade_efx[] = { 0X0F, 0X99, 0XC3 };
-	WriteProcessMemory(hprocess, (LPVOID)0x142123C1B, blade_efx, sizeof(blade_efx), NULL);
+	//WriteProcessMemory(hprocess, (LPVOID)0x142123C1B, blade_efx, sizeof(blade_efx), NULL);
 
 	return;
 }
@@ -536,23 +536,44 @@ void mian_loop() {
 		float playw = *offsetPtr<float>(PlayerBase, 0x170);
 		float playx = *offsetPtr<float>(PlayerBase, 0x174);
 		float playy = *offsetPtr<float>(PlayerBase, 0x178);
-		float playz = *offsetPtr<float>(PlayerBase, 0x17c);
-		float eulerx, eulery, eulerz;
+		float playz = *offsetPtr<float>(PlayerBase, 0x17C);
+
+		float camw = *offsetPtr<float>(PlayerBase, 0x7DBC);
+		float camx = *offsetPtr<float>(PlayerBase, 0x7DC0);
+		float camy = *offsetPtr<float>(PlayerBase, 0x7DC4);
+		float camz = *offsetPtr<float>(PlayerBase, 0x7DC8);
+		float playex, playey, playez;
+		float camex, camey, camez;
 
 		float sinr_cosp = 2 * (playw * playx + playy * playz);
 		float cosr_cosp = 1 - 2 * (playx * playx + playy * playy);
-		eulerx = atan2(sinr_cosp, cosr_cosp);
+		playex = atan2(sinr_cosp, cosr_cosp);
 		float sinp = 2 * (playw * playy - playz * playx);
 		if (abs(sinp) >= 1){
 			if (sinp >= 0)
-				eulery = M_PI / 2;
-			else eulery = -M_PI / 2;
+				playey = M_PI / 2;
+			else playey = -M_PI / 2;
 		}
 		else
-			eulery = asin(sinp);
+			playey = asin(sinp);
 		float  siny_cosp = 2 * (playw * playz + playx * playy);
 		float  cosy_cosp = 1 - 2 * (playy * playy + playz * playz);
-		eulerz = atan2(siny_cosp, cosy_cosp);
+		playez = atan2(siny_cosp, cosy_cosp);
+
+		sinr_cosp = 2 * (camw * camx + camy * camz);
+		cosr_cosp = 1 - 2 * (camx * camx + camy * camy);
+		camx = atan2(sinr_cosp, cosr_cosp);
+		sinp = 2 * (camw * camy - camz * camx);
+		if (abs(sinp) >= 1) {
+			if (sinp >= 0)
+				camey = M_PI / 2;
+			else camey = -M_PI / 2;
+		}
+		else
+			camey = asin(sinp);
+		siny_cosp = 2 * (camw * camz + camx * camy);
+		cosy_cosp = 1 - 2 * (camy * camy + camz * camz);
+		camez = atan2(siny_cosp, cosy_cosp);
 
 		//Ç°
 		if (Keys.LU != 0.0 && Keys.LU >= Keys.LL && Keys.LU >= Keys.LR) {
