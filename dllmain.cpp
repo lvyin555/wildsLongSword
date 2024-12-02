@@ -785,7 +785,7 @@ void mian_loop() {
 								if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
 									for (int RT_count = 0; RT_count < 8; RT_count++) {
 										//循环中若A被按下,则认为按下的是RT+A组合键,将纳刀存入缓冲
-										if (Keys.A > 0) {
+										if (KeyA <=0 && Keys.A > 0) {
 											input[0] = 3;
 											input[1] = 0x62;
 											break;
@@ -802,36 +802,6 @@ void mian_loop() {
 											input[0] = 3;
 											input[1] = 0x44;
 											KeyRT = 1.0;
-										}
-									}
-								}
-								//或若A被按下,进入循环
-								else if (Keys.A > 0) {
-									for (int A_count = 0; A_count < 8; A_count++) {
-										//循环中若RT被按下,则认为按下的是RT+A组合键,将纳刀存入缓冲
-										if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
-											input[0] = 3;
-											input[1] = 0x62;
-											break;
-										}
-										//每个循环有一帧延迟
-										std::this_thread::sleep_for(std::chrono::milliseconds(16));
-
-										//若循环5次也没有按下其他组合键，则认为按下的是A，将翻滚存入缓冲
-										//本组合键判定方式类似游戏本身,会造成A有5帧延迟
-										if (KeyA <= 0 && A_count == 7) {
-											input[0] = 3;
-											//前翻滚
-											if (joyl_ == 1) input[1] = 0x13;
-											//左翻滚
-											else if (joyl_ == 2) input[1] = 0x14;
-											//右翻滚
-											else if (joyl_ == 3) input[1] = 0x15;
-											//后翻滚
-											else if (joyl_ == 4) input[1] = 0x16;
-											//翻滚
-											else input[1] = 0x13;
-											KeyA = 1;
 										}
 									}
 								}
@@ -901,11 +871,11 @@ void mian_loop() {
 					*offsetPtr<int>(playeroff, 0x2d24) = 0xFFFFFFFF;
 				}
 				if (iai_suc) {
-					if(*offsetPtr<int>(playeroff, 0x2370) >= 0)
+					if(*offsetPtr<int>(actoff, 0xe9c4) == 0xC134)
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xC; 
-					if (*offsetPtr<int>(playeroff, 0x2370) >= 2)
+					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC135 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC136)
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xD;
-					if (*offsetPtr<int>(playeroff, 0x2370) >= 3)
+					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC137)
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xE;
 				}
 
