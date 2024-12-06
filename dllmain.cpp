@@ -70,6 +70,7 @@ struct keyboardkeys
 	int keyset_B = VK_RBUTTON;
 	int keyset_A = VK_SPACE;
 	int keyset_RT = 17;
+	int keyset_MR = VK_XBUTTON2;
 	int keyset_RB = VK_LSHIFT;
 	int keyset_LT = 67;
 	int keyset_LU = 87;
@@ -77,6 +78,7 @@ struct keyboardkeys
 	int keyset_LL = 65;
 	int keyset_LR = 68;
 	int keyset_LS = NULL;
+	int keyset_IAI = NULL;
 	float Y = 0;
 	float X = 0;
 	float B = 0;
@@ -89,6 +91,7 @@ struct keyboardkeys
 	float LL = 0;
 	float LR = 0;
 	float LS = 0;
+	float IAI = 0;
 } Keys;
 
 void init_json() {
@@ -99,6 +102,7 @@ void init_json() {
 		int A = config["A"];
 		int B = config["B"];
 		int RT = config["RT"];
+		int MR = config["MR"];
 		int RB = config["RB"];
 		int LT = config["LT"];
 		int LU = config["LU"];
@@ -106,11 +110,13 @@ void init_json() {
 		int LL = config["LL"];
 		int LR = config["LR"];
 		int LS = config["LS"];
+		int IAI = config["IAI"];
 		Keys.keyset_X = X;
 		Keys.keyset_Y = Y;
 		Keys.keyset_A = A;
 		Keys.keyset_B = B;
 		Keys.keyset_RT = RT;
+		Keys.keyset_MR = MR;
 		Keys.keyset_RB = RB;
 		Keys.keyset_LT = LT;
 		Keys.keyset_LU = LU;
@@ -118,6 +124,7 @@ void init_json() {
 		Keys.keyset_LL = LL;
 		Keys.keyset_LR = LR;
 		Keys.keyset_LS = LS;
+		Keys.keyset_IAI = IAI;
 	}
 	catch (const std::exception)
 	{
@@ -126,6 +133,7 @@ void init_json() {
 		config["B"] = VK_RBUTTON;
 		config["X"] = 69;
 		config["RT"] = 17;
+		config["MR"] = VK_XBUTTON2;
 		config["RB"] = VK_LSHIFT;
 		config["LT"] = 67;
 		config["LU"] = 87;
@@ -133,6 +141,7 @@ void init_json() {
 		config["LL"] = 65;
 		config["LR"] = 68;
 		config["LS"] = NULL;
+		config["IAI"] = NULL;
 		ofstream myfile(".\\nativePC\\plugins\\iai\\key_config.json", fstream::out);
 		myfile << config;
 		myfile.close();
@@ -176,6 +185,7 @@ void load_json() {
 	config["B"] = VK_RBUTTON;
 	config["X"] = 69;
 	config["RT"] = 17;
+	config["MR"] = VK_XBUTTON2;
 	config["RB"] = VK_LSHIFT;
 	config["LT"] = 67;
 	config["LU"] = 87;
@@ -183,6 +193,7 @@ void load_json() {
 	config["LL"] = 65;
 	config["LR"] = 68;
 	config["LS"] = NULL;
+	config["IAI"] = NULL;
 	set["TK"] = 0;
 	set["DS"] = 0;
 	set["CC"] = 1;
@@ -374,7 +385,7 @@ void GetNowKey()
 		if (GetAsyncKeyState(Keys.keyset_RB) < 0)
 			Keys.RB = Keys.RB + 0.0166;
 
-		if (GetAsyncKeyState(Keys.keyset_RT) < 0)
+		if (GetAsyncKeyState(Keys.keyset_RT) < 0 || GetAsyncKeyState(Keys.keyset_MR) < 0)
 			Keys.RT = Keys.RT + 0.0166;
 
 		if (GetAsyncKeyState(Keys.keyset_LU) < 0)
@@ -392,6 +403,9 @@ void GetNowKey()
 		if (GetAsyncKeyState(Keys.keyset_LS) < 0)
 			Keys.LS = Keys.LS + 0.0166;
 
+		if (GetAsyncKeyState(Keys.keyset_IAI) < 0)
+			Keys.IAI = Keys.IAI + 0.0166;
+
 		if (*offsetPtr<float>(Gamepad, 0xC90) == 0 && GetAsyncKeyState(Keys.keyset_Y) == 0)
 			Keys.Y = 0;
 
@@ -407,7 +421,7 @@ void GetNowKey()
 		if (*offsetPtr<float>(Gamepad, 0xC84) == 0 && GetAsyncKeyState(Keys.keyset_RB) == 0)
 			Keys.RB = 0;
 
-		if (*offsetPtr<float>(Gamepad, 0xC8C) == 0 && GetAsyncKeyState(Keys.keyset_RT) == 0)
+		if (*offsetPtr<float>(Gamepad, 0xC8C) == 0 && GetAsyncKeyState(Keys.keyset_RT) == 0 && GetAsyncKeyState(Keys.keyset_MR) == 0)
 			Keys.RT = 0;
 
 		if (*offsetPtr<float>(Gamepad, 0xC88) == 0 && GetAsyncKeyState(Keys.keyset_LT) == 0)
@@ -427,6 +441,9 @@ void GetNowKey()
 
 		if (*offsetPtr<float>(Gamepad, 0xC64) == 0 && GetAsyncKeyState(Keys.keyset_LS) == 0)
 			Keys.LS = 0;
+
+		if (GetAsyncKeyState(Keys.keyset_IAI) == 0)
+			Keys.IAI = 0;
 
 		if (Keys.LU + Keys.LD + Keys.LL + Keys.LR > 0)
 			JoyL = true;
@@ -913,6 +930,7 @@ void mian_loop() {
 
 				//红刃机制
 				if (RS){
+					*offsetPtr<float>(playeroff, 0x2378) = 0;
 					//判定刃色
 					if (*offsetPtr<int>(playeroff, 0x2370) >= 3 && lsp >= 3) {
 						*offsetPtr<float>(playeroff, 0x2388) = 1;
@@ -951,8 +969,7 @@ void mian_loop() {
 					}
 					else {
 						if (rs == 1) {
-							*offsetPtr<int>(playeroff, 0x2368) = 0;
-							*offsetPtr<float>(playeroff, 0x2378) = 0;
+							*offsetPtr<float>(playeroff, 0x2368) = 0;
 							*offsetPtr<float>(playeroff, 0x2388) = 0;
 							rs = 0;
 							sbl = 3;
