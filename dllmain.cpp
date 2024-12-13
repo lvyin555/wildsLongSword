@@ -463,7 +463,7 @@ void asm_edit() {
 	HANDLE hprocess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	DWORD64 readByte = NULL;
 	
-	//大居合开刃
+	//大居合不掉刃
 	char ASM_iai_not_decrease_blade_lv[] = { 0xEB };
 	WriteProcessMemory(hprocess, (LPVOID)0X142122F60, ASM_iai_not_decrease_blade_lv, sizeof(ASM_iai_not_decrease_blade_lv), NULL);
 
