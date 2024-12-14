@@ -1,4 +1,4 @@
-// dllmain.cpp : DÃ©finit le point d'entrÃ©e de l'application DLL.
+// dllmain.cpp : D¨¦finit le point d'entr¨¦e de l'application DLL.
 // MHWDLLMod 005
 #include <fstream>
 #include <queue>
@@ -323,7 +323,7 @@ RESTART:
 	// return;
 }*/
 
-//ç®€å•è·å–æŒ‰é”®
+//¼òµ¥»ñÈ¡°´¼ü
 void GetNowKey()
 {
 	Sleep(10000);
@@ -454,7 +454,7 @@ void GetNowKey()
 	}
 	//return;
 }
-//åˆ é™¤å¤§å±…åˆæ‰åˆƒï¼Œè®©æ™®é€šæ”»å‡»ä¹Ÿæœ‰åˆ€å…‰.	
+//É¾³ı´ó¾ÓºÏµôÈĞ£¬ÈÃÆÕÍ¨¹¥»÷Ò²ÓĞµ¶¹â.	
 void asm_edit() {
 	Sleep(10000);
 	DWORD pid;
@@ -463,15 +463,15 @@ void asm_edit() {
 	HANDLE hprocess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	DWORD64 readByte = NULL;
 	
-	//å¤§å±…åˆä¸æ‰åˆƒ
+	//´ó¾ÓºÏ²»µôÈĞ
 	char ASM_iai_not_decrease_blade_lv[] = { 0xEB };
 	WriteProcessMemory(hprocess, (LPVOID)0X142122F60, ASM_iai_not_decrease_blade_lv, sizeof(ASM_iai_not_decrease_blade_lv), NULL);
 
-	//å¤§å›æ—‹ä¸æ¸…ç©ºæ°”åˆƒæ§½
+	//´ó»ØĞı²»Çå¿ÕÆøÈĞ²Û
 	char not_cleat_gauge[] = { 0x90,0x90,0x90,0x90,0x90,0x90 };
 	WriteProcessMemory(hprocess, (LPVOID)0x14212259B, not_cleat_gauge, sizeof(not_cleat_gauge), NULL);
 
-	//åˆ€å…‰
+	//µ¶¹â
 	char blade_efx[] = { 0X0F, 0X99, 0XC3 };
 	//WriteProcessMemory(hprocess, (LPVOID)0x142123C1B, blade_efx, sizeof(blade_efx), NULL);
 
@@ -487,20 +487,21 @@ void fsm_derive(int input1, int input2) {
 }
 
 void mian_loop() {
-	//ç­‰å¾…åç§’é’Ÿé¿å…ç©ºæŒ‡é’ˆ
+	//µÈ´ıÊ®ÃëÖÓ±ÜÃâ¿ÕÖ¸Õë
 	Sleep(10000);
 
-	//æ‰‹æŸ„è¾“å…¥åŸºå€
+	//ÊÖ±úÊäÈë»ùÖ·
 	//void* key = *((undefined**)0x145224a98);
 
-	//ç©å®¶åŸºå€
+	//Íæ¼Ò»ùÖ·
 	void* PlayerObject = *(undefined**)MH::Player::PlayerBasePlot;
-	void* text = (undefined**)MH::Player::PlayerText;
+	void* PlayerSkill = *(undefined**)MH::Player::PlayerSkill;
+	//void* PlayerText = *(undefined**)MH::Player::PlayerText;
 
-	//è¾“å…¥ç¼“å­˜
+	//ÊäÈë»º´æ
 	int input[2] = { 0,0 };
 
-	//å±…åˆæˆåŠŸæ ‡è®°ä½
+	//¾ÓºÏ³É¹¦±ê¼ÇÎ»
 	bool iai_suc = false;
 
 	DWORD pid;
@@ -522,14 +523,14 @@ void mian_loop() {
 	char splvup[] = { 0x8B,0x87,0x70,0x23,0x00,0x00 };
 
 	while (1) {
-		//çº¿ç¨‹æ¯ç§’è¿è¡Œ60æ¬¡,æ¨¡æ‹Ÿ60å¸§åˆ·æ–°
+		//Ïß³ÌÃ¿ÃëÔËĞĞ60´Î,Ä£Äâ60Ö¡Ë¢ĞÂ
 		//Sleep(16);
 		std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
-		//è·å–é”®ç›˜æŒ‰é”®
+		//»ñÈ¡¼üÅÌ°´¼ü
 		//GetNowKey();
 
-		//è·å–åŸºå€,è‹¥ä¸ºç©ºæŒ‡é’ˆåˆ™é‡æ–°å¼€å§‹å¾ªç¯,é¿å…è®¿é—®åˆ°éæ³•åœ°å€
+		//»ñÈ¡»ùÖ·,ÈôÎª¿ÕÖ¸ÕëÔòÖØĞÂ¿ªÊ¼Ñ­»·,±ÜÃâ·ÃÎÊµ½·Ç·¨µØÖ·
 		if (PlayerObject == nullptr) continue;
 		void* PlayerBase = *offsetPtr<void*>(PlayerObject, 0x50);
 		if (PlayerBase == nullptr) continue;
@@ -543,12 +544,13 @@ void mian_loop() {
 		if (wepoff == nullptr) continue;
 		void* actoff = *offsetPtr<void*>(PlayerBase, 0x468);
 		if (actoff == nullptr) continue;
-		void* Playtext = *offsetPtr<void*>(text, 0x948);
-		if (Playtext == nullptr) continue;
+		if (PlayerSkill == nullptr) continue;
+		//if (PlayerText == nullptr) continue;
 		wepoff = *offsetPtr<void*>(wepoff, 0x8);
 		wepoff = *offsetPtr<void*>(wepoff, 0x78);
-		Playtext = *offsetPtr<void*>(Playtext, 0x580);
-		Playtext = *offsetPtr<void*>(Playtext, 0x30);
+		//PlayerText = *offsetPtr<void*>(PlayerText, 0x948);
+		//PlayerText = *offsetPtr<void*>(PlayerText, 0x580);
+		//PlayerText = *offsetPtr<void*>(PlayerText, 0x30);
 
 		float playw = *offsetPtr<float>(PlayerBase, 0x170);
 		float playx = *offsetPtr<float>(PlayerBase, 0x174);
@@ -592,42 +594,42 @@ void mian_loop() {
 		cosy_cosp = 1 - 2 * (camy * camy + camz * camz);
 		camez = atan2(siny_cosp, cosy_cosp);
 
-		//å‰
+		//Ç°
 		if (Keys.LU != 0.0 && Keys.LU >= Keys.LL && Keys.LU >= Keys.LR) {
 			joyl_ = 1;
 		}
-		//å
+		//ºó
 		else if (Keys.LD != 0.0 && Keys.LD >= Keys.LL && Keys.LD >= Keys.LR) {
 			joyl_ = 4;
 		}
-		//å³
+		//ÓÒ
 		else if (Keys.LR > Keys.LU && Keys.LR > Keys.LD)
 			joyl_ = 3;
-		//å·¦
+		//×ó
 		else if (Keys.LL > Keys.LU && Keys.LL > Keys.LD)
 			joyl_ = 2;
-		//æ— 
+		//ÎŞ
 		else
 			joyl_ = 0;
 
-		char t1, t2, t3, t4, t5;
-		t1 = *offsetPtr<char>(Playtext, 0x8DB3);
-		t2 = *offsetPtr<char>(Playtext, 0x8DBA);
-		t3 = *offsetPtr<char>(Playtext, 0x8DCB);
-		t4 = *offsetPtr<char>(Playtext, 0x8DD6);
-		t5 = *offsetPtr<char>(Playtext, 0xA900);
+		//char t1, t2, t3, t4, t5;
+		//t1 = *offsetPtr<char>(PlayerText, 0x8DB3);
+		//t2 = *offsetPtr<char>(PlayerText, 0x8DBA);
+		//t3 = *offsetPtr<char>(PlayerText, 0x8DCB);
+		//t4 = *offsetPtr<char>(PlayerText, 0x8DD6);
+		//t5 = *offsetPtr<char>(PlayerText, 0xA900);
 
-		//çŒ«è½¦
+		//Ã¨³µ
 		if (CC) {
 			if (*offsetPtr<float>(healthoff, 0x64) <= 0.1f) {
-				//ä¸æ‰åˆƒ
+				//²»µôÈĞ
 				if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245B4, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245BB, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 					WriteProcessMemory(hprocess, (LPVOID)0x142124703, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 					WriteProcessMemory(hprocess, (LPVOID)0x1421245C6, CatCar_not_decrease_blade, sizeof(CatCar_not_decrease_blade), NULL);
 				}
-				//ä¸æ‰è¡€è€ä¸Šé™
+				//²»µôÑªÄÍÉÏÏŞ
 				WriteProcessMemory(hprocess, (LPVOID)0x141F6F64D, CatCar_not_decrease_hp, sizeof(CatCar_not_decrease_hp), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x1412FDEAD, CatCar_not_decrease_sp, sizeof(CatCar_not_decrease_sp), NULL);
 				WriteProcessMemory(hprocess, (LPVOID)0x1412FDEB2, CatCar_not_decrease_sp, sizeof(CatCar_not_decrease_sp), NULL);
@@ -642,10 +644,10 @@ void mian_loop() {
 				WriteProcessMemory(hprocess, (LPVOID)0x1421245C6, decrease_bladeup2, sizeof(decrease_bladeup2), NULL);
 			}
 		}
-		//è¡€é‡å¤§äº0.1
+		//ÑªÁ¿´óÓÚ0.1
 		if (*offsetPtr<float>(healthoff, 0x64) > 0.1f) {
 			//*offsetPtr<char>(Playtext, 0xA900) = t5;
-			//åéª‘
+			//×øÆï
 			if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x298)
 				if (*offsetPtr<float>(actoff, 0x10c) < 0.1f)
 					if (JoyL) {
@@ -660,7 +662,7 @@ void mian_loop() {
 			}
 			else if (*offsetPtr<int>(PlayerBase, 0x6278) != 0x298)
 				rd = 0;
-			//åˆ†æ®µç£¨åˆ€
+			//·Ö¶ÎÄ¥µ¶
 			if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC1AD || *offsetPtr<int>(actoff, 0xe9c4) == 0xC046) {
 				if (spq != 0) {
 					*offsetPtr<int>(playeroff, 0x20F8) += 30 * (4 - sp);
@@ -681,7 +683,7 @@ void mian_loop() {
 					sp = 0;
 					spc = 1;
 					spq = 1;
-					//ä¿®å¤åéª‘ç£¨åˆ€é—®é¢˜
+					//ĞŞ¸´×øÆïÄ¥µ¶ÎÊÌâ
 					if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x295){
 						if (*offsetPtr<int>(playeroff, 0x20F8) - spu == 30) {
 							*offsetPtr<int>(playeroff, 0x20F8) += 120;
@@ -690,13 +692,13 @@ void mian_loop() {
 					spu = *offsetPtr<int>(playeroff, 0x20F8);
 				}
 			}
-			//ä¸ºå¤ªåˆ€æ‰ç”Ÿæ•ˆ
+			//ÎªÌ«µ¶²ÅÉúĞ§
 			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x3) {
 				//if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06C)
 					//*offsetPtr<char>(Playtext, 0xA900) = t2;
 				//else
 					//*offsetPtr<char>(Playtext, 0xA900) = t1;
-				//æ›´æ–°åˆƒè‰²ç‰¹æ•ˆ
+				//¸üĞÂÈĞÉ«ÌØĞ§
 				if (lsp != *offsetPtr<int>(playeroff, 0x2370))
 					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
 				else
@@ -712,7 +714,7 @@ void mian_loop() {
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC080 ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AA)
 						if (*offsetPtr<float>(actoff, 0x10c) <= 1.0f) {
-							//ä¿®å¤å¤§å›æ—‹å–æ¶ˆåçš„çŠ¶æ€é—®é¢˜
+							//ĞŞ¸´´ó»ØĞıÈ¡ÏûºóµÄ×´Ì¬ÎÊÌâ
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
 						}
 					isspr = 0;
@@ -723,22 +725,22 @@ void mian_loop() {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 48.0f) {
 							if (Keys.A > 0) {
 								for (int A_count = 0; A_count < 8; A_count++) {
-									//å¾ªç¯ä¸­è‹¥RTè¢«æŒ‰ä¸‹,åˆ™è®¤ä¸ºæŒ‰ä¸‹çš„æ˜¯RT+Bç»„åˆé”®
+									//Ñ­»·ÖĞÈôRT±»°´ÏÂ,ÔòÈÏÎª°´ÏÂµÄÊÇRT+B×éºÏ¼ü
 									if (Keys.RT > 0.0) {
 										break;
 									}
-									//æ¯ä¸ªå¾ªç¯æœ‰ä¸€å¸§å»¶è¿Ÿ
+									//Ã¿¸öÑ­»·ÓĞÒ»Ö¡ÑÓ³Ù
 									if (A_count == 7) {
-										//å¯ä»¥ç”¨ç¿»æ»šå–æ¶ˆå¤§å›æ—‹
-										//å‰ç¿»æ»š
+										//¿ÉÒÔÓÃ·­¹öÈ¡Ïû´ó»ØĞı
+										//Ç°·­¹ö
 										if (joyl_ == 1) fsm_derive(3, 0x13);
-										//å·¦ç¿»æ»š
+										//×ó·­¹ö
 										else if (joyl_ == 2) fsm_derive(3, 0x14);
-										//å³ç¿»æ»š
+										//ÓÒ·­¹ö
 										else if (joyl_ == 3) fsm_derive(3, 0x15);
-										//åç¿»æ»š
+										//ºó·­¹ö
 										else if (joyl_ == 4) fsm_derive(3, 0x16);
-										//ç¿»æ»š
+										//·­¹ö
 										else fsm_derive(3, 0x13);
 										KeyA = 1;
 									}
@@ -750,10 +752,19 @@ void mian_loop() {
 					KeyA = Keys.A;
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
+					void* Skill = *offsetPtr<void*>(PlayerSkill, 0x58);
+					if (Skill == nullptr) continue;
+					Skill = *offsetPtr<void*>(Skill, 0x30);
+					Skill = *offsetPtr<void*>(Skill, 0x558);
+					Skill = *offsetPtr<void*>(Skill, 0x10);
+					if (*offsetPtr<int>(Skill, 0xE58) >= 3) {
+						if (*offsetPtr<float>(actoff, 0x10c) < 15.5f)
+							*offsetPtr<float>(actoff, 0x10c) = 15.5f;
+					}
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
 							if (Keys.A > 0) {
-								//å¯ä»¥ç”¨ç¿»æ»šå–æ¶ˆçº³åˆ€
+								//¿ÉÒÔÓÃ·­¹öÈ¡ÏûÄÉµ¶
 								if (DS) {
 									*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
 									fsm_derive(3, 0x12);
@@ -768,7 +779,7 @@ void mian_loop() {
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AC) {
 					if (*offsetPtr<float>(actoff, 0x10c) >= 35.0f && *offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
 						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
-							//ç™»é¾™æ´¾ç”Ÿçº³åˆ€
+							//µÇÁúÅÉÉúÄÉµ¶
 							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
 							fsm_derive(1, 0xD1);
 						}
@@ -777,7 +788,7 @@ void mian_loop() {
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
 					if (*offsetPtr<float>(actoff, 0x10c) >= 80.0f) {
 						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
-							//è§åˆ‡æ´¾ç”Ÿçº³åˆ€
+							//¼ûÇĞÅÉÉúÄÉµ¶
 							if (JoyL)
 								fsm_derive(3, 9);
 							else
@@ -786,22 +797,22 @@ void mian_loop() {
 					}
 				}
 
-				//å¤§å±…åˆæ´¾ç”Ÿæ§åˆ¶
+				//´ó¾ÓºÏÅÉÉú¿ØÖÆ
 				if (*offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463) {
 					if (iai_suc && *offsetPtr<float>(actoff, 0x10c) < 50.0f) {
 						*offsetPtr<float>(PlayerBase, 0xE168) = 10.0f;
 					}
 
-					//åœ¨å±…åˆå¸§æ•°è¶…è¿‡60å¸§å°±å¼€å§‹è®°å½•è¾“å…¥
-					//é€šè¿‡è¾“å…¥ç¼“å†²æ¥è¾¾æˆé¢„è¾“å…¥çš„æ•ˆæœ
+					//ÔÚ¾ÓºÏÖ¡Êı³¬¹ı60Ö¡¾Í¿ªÊ¼¼ÇÂ¼ÊäÈë
+					//Í¨¹ıÊäÈë»º³åÀ´´ï³ÉÔ¤ÊäÈëµÄĞ§¹û
 					if (*offsetPtr<float>(actoff, 0x10c) >= 60.0f) {
 						if (input[0] == 0 && input[1] == 0) {
-							//å¤§å±…åˆæˆåŠŸæ´¾ç”Ÿ
+							//´ó¾ÓºÏ³É¹¦ÅÉÉú
 							if (iai_suc) {
-								//è‹¥RTè¢«æŒ‰ä¸‹,è¿›å…¥å¾ªç¯
+								//ÈôRT±»°´ÏÂ,½øÈëÑ­»·
 								if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
 									for (int RT_count = 0; RT_count < 8; RT_count++) {
-										//å¾ªç¯ä¸­è‹¥Aè¢«æŒ‰ä¸‹,åˆ™è®¤ä¸ºæŒ‰ä¸‹çš„æ˜¯RT+Aç»„åˆé”®,å°†çº³åˆ€å­˜å…¥ç¼“å†²
+										//Ñ­»·ÖĞÈôA±»°´ÏÂ,ÔòÈÏÎª°´ÏÂµÄÊÇRT+A×éºÏ¼ü,½«ÄÉµ¶´æÈë»º³å
 										if (KeyA <=0 && Keys.A > 0) {
 											input[0] = 3;
 											input[1] = 0x62;
@@ -810,11 +821,11 @@ void mian_loop() {
 										if (Keys.Y > 0) {
 											break;
 										}
-										//æ¯ä¸ªå¾ªç¯æœ‰ä¸€å¸§å»¶è¿Ÿ
+										//Ã¿¸öÑ­»·ÓĞÒ»Ö¡ÑÓ³Ù
 										std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
-										//è‹¥å¾ªç¯5æ¬¡ä¹Ÿæ²¡æœ‰æŒ‰ä¸‹å…¶ä»–ç»„åˆé”®ï¼Œåˆ™è®¤ä¸ºæŒ‰ä¸‹çš„æ˜¯RTï¼ŒåŒæ—¶æœ‰è¶³å¤Ÿçš„æ°”ï¼Œå°†æ°”åˆƒæ–©3å­˜å…¥ç¼“å†²
-										//æœ¬ç»„åˆé”®åˆ¤å®šæ–¹å¼ç±»ä¼¼æ¸¸æˆæœ¬èº«,ä¼šé€ æˆRTæœ‰5å¸§å»¶è¿Ÿ
+										//ÈôÑ­»·5´ÎÒ²Ã»ÓĞ°´ÏÂÆäËû×éºÏ¼ü£¬ÔòÈÏÎª°´ÏÂµÄÊÇRT£¬Í¬Ê±ÓĞ×ã¹»µÄÆø£¬½«ÆøÈĞÕ¶3´æÈë»º³å
+										//±¾×éºÏ¼üÅĞ¶¨·½Ê½ÀàËÆÓÎÏ·±¾Éí,»áÔì³ÉRTÓĞ5Ö¡ÑÓ³Ù
 										if (KeyRT <= 0.0 && RT_count == 7 && *offsetPtr<float>(playeroff, 0x2368) >= 0.2f) {
 											input[0] = 3;
 											input[1] = 0x44;
@@ -822,18 +833,18 @@ void mian_loop() {
 										}
 									}
 								}
-								//æˆ–è‹¥Yè¢«æŒ‰ä¸‹,è¿›å…¥å¾ªç¯
+								//»òÈôY±»°´ÏÂ,½øÈëÑ­»·
 								else if (Keys.Y > 0) {
 									for (int Y_count = 0; Y_count < 8; Y_count++) {
-										//å¾ªç¯ä¸­è‹¥RTè¢«æŒ‰ä¸‹,åˆ™è®¤ä¸ºæŒ‰ä¸‹çš„æ˜¯RT+Yç»„åˆé”®
+										//Ñ­»·ÖĞÈôRT±»°´ÏÂ,ÔòÈÏÎª°´ÏÂµÄÊÇRT+Y×éºÏ¼ü
 										if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
 											break;
 										}
-										//æ¯ä¸ªå¾ªç¯æœ‰ä¸€å¸§å»¶è¿Ÿ
+										//Ã¿¸öÑ­»·ÓĞÒ»Ö¡ÑÓ³Ù
 										std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
-										//è‹¥å¾ªç¯5æ¬¡ä¹Ÿæ²¡æœ‰æŒ‰ä¸‹å…¶ä»–ç»„åˆé”®ï¼Œåˆ™è®¤ä¸ºæŒ‰ä¸‹çš„æ˜¯Yï¼Œå°†è¸æ­¥æ–©å­˜å…¥ç¼“å†²
-										//æœ¬ç»„åˆé”®åˆ¤å®šæ–¹å¼ç±»ä¼¼æ¸¸æˆæœ¬èº«,ä¼šé€ æˆYæœ‰5å¸§å»¶è¿Ÿ
+										//ÈôÑ­»·5´ÎÒ²Ã»ÓĞ°´ÏÂÆäËû×éºÏ¼ü£¬ÔòÈÏÎª°´ÏÂµÄÊÇY£¬½«Ì¤²½Õ¶´æÈë»º³å
+										//±¾×éºÏ¼üÅĞ¶¨·½Ê½ÀàËÆÓÎÏ·±¾Éí,»áÔì³ÉYÓĞ5Ö¡ÑÓ³Ù
 										if (KeyY <= 0 && Y_count == 7) {
 											if (JoyL) {
 												input[0] = 3;
@@ -848,9 +859,13 @@ void mian_loop() {
 										}
 									}
 								}
+								else if (Keys.IAI > 0) {
+									input[0] = 3;
+									input[1] = 0x62;
+								}
 							}
-							//ä¸éœ€è¦å±…åˆæˆåŠŸçš„æ´¾ç”Ÿ
-							//è‹¥æŒ‰ä¸‹RB,åˆ™å°†å¿«é€Ÿçº³åˆ€å­˜å…¥ç¼“å†²
+							//²»ĞèÒª¾ÓºÏ³É¹¦µÄÅÉÉú
+							//Èô°´ÏÂRB,Ôò½«¿ìËÙÄÉµ¶´æÈë»º³å
 							if (TK) {
 								if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
 									input[0] = 3;
@@ -860,8 +875,8 @@ void mian_loop() {
 						}
 					}
 
-					//è‹¥ç¼“å†²å·²æœ‰æ‹›å¼,å¹¶ä¸”å¸§æ•°å¤§äº70å¸§,åˆ™æ´¾ç”Ÿç¼“å†²ä¸­çš„æ‹›å¼,å¹¶æ¸…ç†ç¼“å†²
-					//æœ¬æ–¹å¼å¯ä»¥åœ¨60å¸§ä»¥åå¼€å§‹æ¥å—è¾“å…¥æ•°æ®,å¹¶åœ¨70å¸§ä»¥åè¿›è¡Œæ´¾ç”Ÿ,ç±»ä¼¼æ¸¸æˆæœ¬èº«çš„é¢„è¾“å…¥æ–¹å¼
+					//Èô»º³åÒÑÓĞÕĞÊ½,²¢ÇÒÖ¡Êı´óÓÚ70Ö¡,ÔòÅÉÉú»º³åÖĞµÄÕĞÊ½,²¢ÇåÀí»º³å
+					//±¾·½Ê½¿ÉÒÔÔÚ60Ö¡ÒÔºó¿ªÊ¼½ÓÊÜÊäÈëÊı¾İ,²¢ÔÚ70Ö¡ÒÔºó½øĞĞÅÉÉú,ÀàËÆÓÎÏ·±¾ÉíµÄÔ¤ÊäÈë·½Ê½
 					if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
 						if (input[0] != 0 && input[1] != 0) {
 							if (input[1] == 0x13 || input[1] == 0x14 || input[1] == 0x15 || input[1] == 0x16){
@@ -880,10 +895,10 @@ void mian_loop() {
 					else
 						KeyRT = Keys.RB;
 				}
-				//æ¸…ç†ç¼“å†²
+				//ÇåÀí»º³å
 				else { input[0] = 0; input[1] = 0; }
 
-				//å¤§å±…åˆçš„ä¼¤å®³æ§åˆ¶
+				//´ó¾ÓºÏµÄÉËº¦¿ØÖÆ
 				if (!iai_suc && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463 && *offsetPtr<int>(playeroff, 0x2d24) != 0xFFFFFFFF) {
 					*offsetPtr<int>(playeroff, 0x2d24) = 0xFFFFFFFF;
 				}
@@ -896,7 +911,7 @@ void mian_loop() {
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xE;
 				}
 
-				//å¤§å±…åˆå¼€åˆƒ
+				//´ó¾ÓºÏ¿ªÈĞ
 				if (*offsetPtr<BYTE>(playeroff, 0x2CED) == 1 && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463) {
 					if (*offsetPtr<float>(playeroff, 0x2d10) != 0) {
 						if(RS && *offsetPtr<int>(playeroff, 0x2370) >= 3) {
@@ -915,7 +930,7 @@ void mian_loop() {
 				else
 					riai = 1;
 
-				//å¤§å±…åˆçš„æˆåŠŸæ ‡å¿—ä½åˆ¤å®š
+				//´ó¾ÓºÏµÄ³É¹¦±êÖ¾Î»ÅĞ¶¨
 				if (iai_suc == false && *offsetPtr<BYTE>(playeroff, 0x2CED) == 1 && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463)
 					iai_suc = true;
 				else if (iai_suc == true && *offsetPtr<BYTE>(playeroff, 0x2CED) == 0 && (*offsetPtr<int>(actoff, 0xe9c4) < 49460 || *offsetPtr<int>(actoff, 0xe9c4) > 49463))
@@ -928,22 +943,22 @@ void mian_loop() {
 					}
 				}
 
-				//çº¢åˆƒæœºåˆ¶
+				//ºìÈĞ»úÖÆ
 				if (RS){
 					*offsetPtr<float>(playeroff, 0x2378) = 0;
-					//åˆ¤å®šåˆƒè‰²
+					//ÅĞ¶¨ÈĞÉ«
 					if (*offsetPtr<int>(playeroff, 0x2370) >= 3 && lsp >= 3) {
 						*offsetPtr<float>(playeroff, 0x2388) = 1;
 						if (rs) {
 							if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
-								//çœ‹ç ´æˆåŠŸå›æ°”
+								//¿´ÆÆ³É¹¦»ØÆø
 								if (*offsetPtr<BYTE>(playeroff, 0x239a) == 1) {
 									if (fsb) {
 										*offsetPtr<float>(playeroff, 0x2374) += 0.1;
 										fsb = 0;
 									}
 								}
-								//çœ‹ç ´åŠ¨ä½œè€—æ°”
+								//¿´ÆÆ¶¯×÷ºÄÆø
 								if (rfs) {
 									*offsetPtr<float>(playeroff, 0x2374) -= 0.2;
 									rfs = 0;
@@ -953,7 +968,7 @@ void mian_loop() {
 								rfs = 1;
 								fsb = 1;
 							}
-							//å¼€åˆƒåŠ¨ä½œå›æ°”
+							//¿ªÈĞ¶¯×÷»ØÆø
 							if (*offsetPtr<int>(playeroff, 0x2cec) == 1 && !iai_suc) {
 								*offsetPtr<int>(playeroff, 0x2cec) = 0;
 								if (sbl > 0) {
