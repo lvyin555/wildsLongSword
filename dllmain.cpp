@@ -704,6 +704,17 @@ void mian_loop() {
 				else
 					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
 				lsp = *offsetPtr<int>(playeroff, 0x2370);
+
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC032 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC033) {
+					if (*offsetPtr<float>(actoff, 0x10c) >= 5) {
+						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+							//空中纳刀
+							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+							fsm_derive(1, 0xD1);
+						}
+					}
+				}
+
 				if (isspr) {
 					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06B ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC077 ||
@@ -866,10 +877,20 @@ void mian_loop() {
 							}
 							//不需要居合成功的派生
 							//若按下RB,则将快速纳刀存入缓冲
-							if (TK) {
-								if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+							if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+								if (TK) {
 									input[0] = 3;
 									input[1] = 0x6B;
+								}
+								else {
+									if (JoyL){
+										input[0] = 3;
+										input[1] = 9;
+									}
+									else {
+										input[0] = 3;
+										input[1] = 6;
+									}
 								}
 							}
 						}
@@ -879,7 +900,12 @@ void mian_loop() {
 					//本方式可以在60帧以后开始接受输入数据,并在70帧以后进行派生,类似游戏本身的预输入方式
 					if (*offsetPtr<float>(actoff, 0x10c) >= 70.0f) {
 						if (input[0] != 0 && input[1] != 0) {
-							fsm_derive(input[0], input[1]);
+							if (input[1] == 6 || input[1] == 9){
+								if (*offsetPtr<float>(actoff, 0x10c) >= 150.0f)
+									fsm_derive(input[0], input[1]);
+							}
+							else
+								fsm_derive(input[0], input[1]);
 							input[0] = 0; input[1] = 0;
 						}
 					}
