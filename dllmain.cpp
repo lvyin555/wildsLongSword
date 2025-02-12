@@ -53,6 +53,7 @@ int sbl = 3;
 int rfs = 1;
 int fsb = 1;
 int riai = 0;
+int rh = 0;
 int a = 0;
 int lsp = 0;
 int TK, DS, CC, RS, RE, LS;
@@ -698,6 +699,9 @@ void mian_loop() {
 					//*offsetPtr<char>(Playtext, 0xA900) = t2;
 				//else
 					//*offsetPtr<char>(Playtext, 0xA900) = t1;
+				//缩放倍率
+				float* fsmp = (float*)(*(int*)0x1451238C8 + *offsetPtr<int>(PlayerBase, 0x10) * 0xf8 + 0x9c);
+				*fsmp = 1.0;
 				//更新刃色特效
 				if (lsp != *offsetPtr<int>(playeroff, 0x2370))
 					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
@@ -770,7 +774,11 @@ void mian_loop() {
 					Skill = *offsetPtr<void*>(Skill, 0x10);
 					if (*offsetPtr<int>(Skill, 0xE58) >= 3) {
 						if (*offsetPtr<float>(actoff, 0x10c) < 15.5f)
-							*offsetPtr<float>(actoff, 0x10c) = 15.5f;
+							*fsmp = 1.55;
+						else if (*offsetPtr<float>(actoff, 0x10c) < 80.0f)
+							*fsmp = 1.2;
+						else
+							*fsmp = 1.0;
 					}
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
@@ -966,7 +974,6 @@ void mian_loop() {
 
 				//红刃机制
 				if (RS){
-					*offsetPtr<float>(playeroff, 0x2378) = 0;
 					//判定刃色
 					if (*offsetPtr<int>(playeroff, 0x2370) >= 3 && lsp >= 3) {
 						*offsetPtr<float>(playeroff, 0x2388) = 1;
@@ -1005,12 +1012,21 @@ void mian_loop() {
 					}
 					else {
 						if (rs == 1) {
-							*offsetPtr<float>(playeroff, 0x2368) = 0;
-							*offsetPtr<float>(playeroff, 0x2388) = 0;
 							rs = 0;
 							sbl = 3;
+							*offsetPtr<float>(playeroff, 0x2368) = 0;
+							*offsetPtr<float>(playeroff, 0x2388) = 0;
+						}
+						if (rh > 0) {
+							rh--;
+							*offsetPtr<float>(playeroff, 0x2368) += 0.02;
 						}
 					}
+					if (*offsetPtr<float>(playeroff, 0x2378) > 0) {
+						*offsetPtr<float>(playeroff, 0x2378) = 0;
+						rh = 7;
+					}
+					
 				}
 			}
 		}
