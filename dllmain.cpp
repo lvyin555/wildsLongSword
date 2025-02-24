@@ -546,6 +546,11 @@ void mian_loop() {
 		void* actoff = *offsetPtr<void*>(PlayerBase, 0x468);
 		if (actoff == nullptr) continue;
 		if (PlayerSkill == nullptr) continue;
+		void* Props = *offsetPtr<void*>(PlayerBase, 0x80);
+		if (Props == nullptr) continue;
+		Props = *offsetPtr<void*>(Props, 0x80);
+		Props = *offsetPtr<void*>(Props, 0x10);
+		Props = *offsetPtr<void*>(Props, 0x288);
 		//if (PlayerText == nullptr) continue;
 		wepoff = *offsetPtr<void*>(wepoff, 0x8);
 		wepoff = *offsetPtr<void*>(wepoff, 0x78);
@@ -685,7 +690,7 @@ void mian_loop() {
 					spc = 1;
 					spq = 1;
 					//修复坐骑磨刀问题
-					if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x295){
+					if (*offsetPtr<int>(PlayerBase, 0x6278) == 0x295 && *offsetPtr<int>(Props, 0x28E0) == 0x72){
 						if (*offsetPtr<int>(playeroff, 0x20F8) - spu == 30) {
 							*offsetPtr<int>(playeroff, 0x20F8) += 120;
 						}
@@ -700,8 +705,8 @@ void mian_loop() {
 				//else
 					//*offsetPtr<char>(Playtext, 0xA900) = t1;
 				//缩放倍率
-				float* fsmp = (float*)(*(int*)0x1451238C8 + *offsetPtr<int>(PlayerBase, 0x10) * 0xf8 + 0x9c);
-				*fsmp = 1.0;
+				//float* fsmp = (float*)(*(int*)0x1451238C8 + *offsetPtr<int>(PlayerBase, 0x10) * 0xf8 + 0x9c);
+				//*fsmp = 1.0;
 				//更新刃色特效
 				if (lsp != *offsetPtr<int>(playeroff, 0x2370))
 					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, not_splvup, sizeof(not_splvup), NULL);
@@ -767,19 +772,24 @@ void mian_loop() {
 					KeyA = Keys.A;
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
-					void* Skill = *offsetPtr<void*>(PlayerSkill, 0x58);
+					/*void* Skill = *offsetPtr<void*>(PlayerSkill, 0x58);
 					if (Skill == nullptr) continue;
 					Skill = *offsetPtr<void*>(Skill, 0x30);
+					if (Skill == nullptr) continue;
 					Skill = *offsetPtr<void*>(Skill, 0x558);
+					if (Skill == nullptr) continue;
 					Skill = *offsetPtr<void*>(Skill, 0x10);
-					if (*offsetPtr<int>(Skill, 0xE58) >= 3) {
-						if (*offsetPtr<float>(actoff, 0x10c) < 15.5f)
-							*fsmp = 1.55;
-						else if (*offsetPtr<float>(actoff, 0x10c) < 80.0f)
-							*fsmp = 1.2;
-						else
-							*fsmp = 1.0;
-					}
+					if (Skill == nullptr) continue;
+					else if (Skill != nullptr){
+						if (*offsetPtr<int>(Skill, 0xE58) >= 3) {
+							if (*offsetPtr<float>(actoff, 0x10c) < 15.5f)
+								*fsmp = 1.55;
+							else if (*offsetPtr<float>(actoff, 0x10c) < 80.0f)
+								*fsmp = 1.2;
+							else
+								*fsmp = 1.0;
+						}
+					}*/
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
 							if (Keys.A > 0) {
