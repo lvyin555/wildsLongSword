@@ -49,13 +49,14 @@ int spc = 1;
 int spq = 1;
 int spu = 0;
 int rs = 0;
-int sbl = 3;
+int sbl = 3, laisbl = 1;
 int rfs = 1;
 int fsb = 1;
 int riai = 0;
 int rh = 0;
 int a = 0;
 int lsp = 0;
+int jk = 0;
 int TK, DS, CC, RS, RE, LS;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
@@ -523,6 +524,7 @@ void mian_loop() {
 	char decrease_sp2[] = { 0xF3,0x0F,0x11,0x43,0x74 };
 	char splvup[] = { 0x8B,0x87,0x70,0x23,0x00,0x00 };
 
+
 	while (1) {
 		//线程每秒运行60次,模拟60帧刷新
 		//Sleep(16);
@@ -714,16 +716,63 @@ void mian_loop() {
 					WriteProcessMemory(hprocess, (LPVOID)0x142123DBF, splvup, sizeof(splvup), NULL);
 				lsp = *offsetPtr<int>(playeroff, 0x2370);
 
-				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC032 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC033) {
-					if (*offsetPtr<float>(actoff, 0x10c) >= 5) {
-						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
-							//空中纳刀
-							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
-							fsm_derive(1, 0xD1);
-						}
+				//空中判定
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0x7105) {
+					if (jk){
+						jk = 0;
+						*offsetPtr<float>(actoff, 0x10c) = 37;
+					}
+					if (*offsetPtr<float>(actoff, 0x10c) >= 78){
+						*offsetPtr<float>(actoff, 0x10c) = 40;
 					}
 				}
+				if (*offsetPtr<int>(PlayerBase, 0x1128) == 1) {
+					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC032 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC033) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 5) {
+							if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+								//空中纳刀
+								*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+								//fsm_derive(1, 0xD1);
+								jk = 1;
+								fsm_derive(1, 0x2A9);
+							}
+						}
+					}
+					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AC) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 35.0f && *offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
+							if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+								//登龙派生纳刀
+								*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+								jk = 1;
+								fsm_derive(1, 0x2A9);
+							}
+						}
+					}
+					//空中不掉练气
+					if (*offsetPtr<float>(playeroff, 0x2374) < 0.01 && *offsetPtr<int>(PlayerBase, 0x76a8) == 1) *offsetPtr<float>(playeroff, 0x2374) = 0.01;
+				}
+				else {
+					jk = 0;
+				}
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06C) {
+					if (KeyY <= 0) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 108.0f) {
+							if (Keys.Y > 0 && JoyL) {
+								for (int Y_count = 0; Y_count < 8; Y_count++) {
+									if (Keys.RT > 0.0 || Keys.B > 0) {
+										break;
+									}
 
+									if (Y_count == 7) {
+										fsm_derive(3, 0x55);
+										//气刃斩三派生踏步直斩
+									}
+								}
+							}
+						}
+					}
+					KeyY = Keys.Y;
+				}
 				if (isspr) {
 					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06B ||
 						*offsetPtr<int>(actoff, 0xe9c4) == 0xC077 ||
@@ -804,15 +853,6 @@ void mian_loop() {
 						}
 					}
 					KeyA = Keys.A;
-				}
-				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC0AC) {
-					if (*offsetPtr<float>(actoff, 0x10c) >= 35.0f && *offsetPtr<float>(actoff, 0x10c) <= 120.0f) {
-						if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
-							//登龙派生纳刀
-							*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
-							fsm_derive(1, 0xD1);
-						}
-					}
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
 					if (*offsetPtr<float>(actoff, 0x10c) >= 80.0f) {
@@ -954,9 +994,9 @@ void mian_loop() {
 				if (*offsetPtr<BYTE>(playeroff, 0x2CED) == 1 && *offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463) {
 					if (*offsetPtr<float>(playeroff, 0x2d10) != 0) {
 						if(RS && *offsetPtr<int>(playeroff, 0x2370) >= 3) {
-							if (riai && sbl > 0) {
+							if (riai && laisbl > 0) {
 								*offsetPtr<float>(playeroff, 0x2374) += 0.2;
-								sbl -= 1;
+								laisbl -= 1;
 								riai = 0;
 							}
 						}
@@ -1024,6 +1064,7 @@ void mian_loop() {
 						if (rs == 1) {
 							rs = 0;
 							sbl = 3;
+							laisbl = 1;
 							*offsetPtr<float>(playeroff, 0x2368) = 0;
 							*offsetPtr<float>(playeroff, 0x2388) = 0;
 						}
