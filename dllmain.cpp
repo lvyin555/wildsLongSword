@@ -24,6 +24,7 @@
 #include <string>
 #include <conio.h>
 #include <math.h>
+#include <cmath>
 #include "AOB memscan.h"
 #include <MMSystem.h>
 #pragma comment(lib,"Winmm.lib")
@@ -39,25 +40,8 @@ json config = json::object();
 json set = json::object();
 bool JoyL = false;
 int joyl_ = 0;
-float KeyA = 1;
-float KeyY = 1;
-float KeyRT = 1.0;
-int isspr = 0;
-int rd = 0;
-int sp = 0;
-int spc = 1;
-int spq = 1;
-int spu = 0;
-int rs = 0;
-int sbl = 3, laisbl = 1;
-int rfs = 1;
-int fsb = 1;
-int riai = 0;
-int rh = 0;
-int a = 0;
-int lsp = 0;
-int jk = 0;
-int TK, DS, CC, RS, RE, LS;
+
+int TK, DS, CC, RS, RE, LS, TP;
 static void* (*spiritBlade_LvUP)(void*) = (void* (*)(void*))0x142122570;
 static void* (*spiritBlade_Refresh)(void*) = (void* (*)(void*))0x142123DBF;
 
@@ -156,6 +140,7 @@ void init_json() {
 		RS = set["RS"];
 		RE = set["RE"];
 		LS = set["LS"];
+		TP = set["TP"];
 	}
 	catch (const std::exception)
 	{
@@ -165,6 +150,7 @@ void init_json() {
 		set["RS"] = 1;
 		set["RE"] = 0;
 		set["LS"] = 0;
+		set["TP"] = 1;
 		ofstream myfile(".\\nativePC\\plugins\\iai\\config.json", fstream::out);
 		myfile << set;
 		myfile.close();
@@ -202,6 +188,7 @@ void load_json() {
 	set["RS"] = 1;
 	set["RE"] = 0;
 	set["LS"] = 1;
+	set["TP"] = 1;
 RESTART:
 	ifstream i(".\\nativePC\\plugins\\iai\\key_config.json");
 	ifstream f(".\\nativePC\\plugins\\iai\\config.json");
@@ -473,10 +460,6 @@ void asm_edit() {
 	char not_cleat_gauge[] = { 0x90,0x90,0x90,0x90,0x90,0x90 };
 	WriteProcessMemory(hprocess, (LPVOID)0x14212259B, not_cleat_gauge, sizeof(not_cleat_gauge), NULL);
 
-	//刀光
-	char blade_efx[] = { 0X0F, 0X99, 0XC3 };
-	//WriteProcessMemory(hprocess, (LPVOID)0x142123C1B, blade_efx, sizeof(blade_efx), NULL);
-
 	return;
 }
 
@@ -486,6 +469,81 @@ void fsm_derive(int input1, int input2) {
 	*offsetPtr<int>(PlayerBase, 0x6284) = input1;
 	*offsetPtr<int>(PlayerBase, 0x6288) = input2;
 	return;
+}
+
+float Camera_Angle() {
+	void* PlayerObj = *(undefined**)MH::Player::PlayerBasePlot;
+	void* PlayerBase = *offsetPtr<void*>(PlayerObj, 0x50);
+	float Camera_Location_x = *offsetPtr<float>(PlayerBase, 0x7DC0);
+	float Camera_Location_z = *offsetPtr<float>(PlayerBase, 0x7DC8);
+	if (Camera_Location_z >= 0) {
+		return asin(Camera_Location_x);
+	}
+	else if (Camera_Location_x >= 0 && Camera_Location_z < 0) {
+		return acos(Camera_Location_z);
+	}
+	else if (Camera_Location_x < 0 && Camera_Location_z < 0) {
+		return -acos(Camera_Location_z);
+	}
+}
+
+float Play_Angle() {
+	void* PlayerObj = *(undefined**)MH::Player::PlayerBasePlot;
+	void* PlayerBase = *offsetPtr<void*>(PlayerObj, 0x50);
+	float Play_Location_x = *offsetPtr<float>(PlayerBase, 0x230);
+	float Play_Location_z = *offsetPtr<float>(PlayerBase, 0x238);
+	if (Play_Location_z >= 0) {
+		return asin(Play_Location_x);
+	}
+	else if (Play_Location_x >= 0 && Play_Location_z < 0) {
+		return acos(Play_Location_z);
+	}
+	else if (Play_Location_x < 0 && Play_Location_z < 0) {
+		return -acos(Play_Location_z);
+	}
+}
+
+float Joy_Angle() {
+	void* PlayerJoy = *(undefined**)MH::Player::PlayerJoy;
+	float Xbox_Left_x = *offsetPtr<int>(PlayerJoy, 0x248);
+	float Xbox_Left_z = *offsetPtr<int>(PlayerJoy, 0x24C);
+	float R = (float)pow(pow(Xbox_Left_x, 2) + pow(Xbox_Left_z, 2), 0.5);
+	if (R > 32767 * 0.6) {
+		Xbox_Left_x = Xbox_Left_x / R;
+		Xbox_Left_z = Xbox_Left_z / R;
+		if (Xbox_Left_z >= 0) {
+			return asin(Xbox_Left_x);
+		}
+		else if (Xbox_Left_x >= 0 && Xbox_Left_z < 0) {
+			return acos(Xbox_Left_z);
+		}
+		else if (Xbox_Left_x < 0 && Xbox_Left_z < 0) {
+			return -acos(Xbox_Left_z);
+		}
+	}
+	return 0;
+}
+
+void play_ToAngle(float Angle) {
+	void* PlayerObj = *(undefined**)MH::Player::PlayerBasePlot;
+	void* PlayerBase = *offsetPtr<void*>(PlayerObj, 0x50);
+	static float PI = (float)3.14159265358979323846;
+	float x = 0, y = 0, z = 0;
+	if (Angle / PI > 0.5) { x = PI; y = Angle - PI; z = 0; }
+	else if (Angle / PI < -0.5) { x = PI; y = Angle + PI; z = 0; }
+	else { x = 0; y = -Angle; z = PI; }
+	float cr = (float)cos(x * 0.5);
+	float sr = (float)sin(x * 0.5);
+	float cp = (float)cos(y * 0.5);
+	float sp = (float)sin(y * 0.5);
+	float cy = (float)cos(z * 0.5);
+	float sy = (float)sin(z * 0.5);
+	float qw = cy * cp * cr + sy * sp * sr;
+	float qx = cy * cp * sr - sy * sp * cr;
+	float qy = sy * cp * sr + cy * sp * cr;
+	float qz = sy * cp * cr - cy * sp * sr;
+	*offsetPtr<float>(PlayerBase, 0x174) = qx;
+	*offsetPtr<float>(PlayerBase, 0x17C) = qz;
 }
 
 void mian_loop() {
@@ -506,6 +564,28 @@ void mian_loop() {
 	//居合成功标记位
 	bool iai_suc = false;
 
+	int rd = 0;
+	int sp = 0;
+	int spc = 1;
+	int spq = 1;
+	int spu = 0;
+	int rs = 0;
+	int sbl = 3, laisbl = 1;
+	int rfs = 1;
+	int fsb = 1;
+	int riai = 0;
+	int rh = 0;
+	int a = 0;
+	int lsp = 0;
+	int jk = 0;
+	int ndf = 0;
+	float KeyA = 1;
+	float KeyY = 1;
+	float KeyRT = 1.0;
+	int isspr = 0;
+	float angle, frame;
+	float Target, Difftime;
+
 	DWORD pid;
 	HWND hwnd = FindWindow(NULL, "MONSTER HUNTER: WORLD(421810)");
 	GetWindowThreadProcessId(hwnd, &pid);
@@ -523,7 +603,13 @@ void mian_loop() {
 	char decrease_sp[] = { 0xF3,0x0F,0x11,0x43,0x70 };
 	char decrease_sp2[] = { 0xF3,0x0F,0x11,0x43,0x74 };
 	char splvup[] = { 0x8B,0x87,0x70,0x23,0x00,0x00 };
-
+	char blade_efx[] = { 0X0F, 0X99, 0XC3 };
+	char not_blade_efx[] = { 0X0F, 0X95, 0XC3 };
+	//AllocConsole();
+	//FILE* fileStream;
+	//freopen_s(&fileStream, "CONOUT$", "w", stdout);
+	//freopen_s(&fileStream, "CONIN$", "r", stdin);
+	//freopen_s(&fileStream, "CONOUT$", "w", stderr);
 
 	while (1) {
 		//线程每秒运行60次,模拟60帧刷新
@@ -560,47 +646,8 @@ void mian_loop() {
 		//PlayerText = *offsetPtr<void*>(PlayerText, 0x580);
 		//PlayerText = *offsetPtr<void*>(PlayerText, 0x30);
 
-		float playw = *offsetPtr<float>(PlayerBase, 0x170);
-		float playx = *offsetPtr<float>(PlayerBase, 0x174);
-		float playy = *offsetPtr<float>(PlayerBase, 0x178);
-		float playz = *offsetPtr<float>(PlayerBase, 0x17C);
-
-		float camw = *offsetPtr<float>(PlayerBase, 0x7DBC);
-		float camx = *offsetPtr<float>(PlayerBase, 0x7DC0);
-		float camy = *offsetPtr<float>(PlayerBase, 0x7DC4);
-		float camz = *offsetPtr<float>(PlayerBase, 0x7DC8);
-		float playex, playey, playez;
-		float camex, camey, camez;
-
-		float sinr_cosp = 2 * (playw * playx + playy * playz);
-		float cosr_cosp = 1 - 2 * (playx * playx + playy * playy);
-		playex = atan2(sinr_cosp, cosr_cosp);
-		float sinp = 2 * (playw * playy - playz * playx);
-		if (abs(sinp) >= 1){
-			if (sinp >= 0)
-				playey = M_PI / 2;
-			else playey = -M_PI / 2;
-		}
-		else
-			playey = asin(sinp);
-		float  siny_cosp = 2 * (playw * playz + playx * playy);
-		float  cosy_cosp = 1 - 2 * (playy * playy + playz * playz);
-		playez = atan2(siny_cosp, cosy_cosp);
-
-		sinr_cosp = 2 * (camw * camx + camy * camz);
-		cosr_cosp = 1 - 2 * (camx * camx + camy * camy);
-		camx = atan2(sinr_cosp, cosr_cosp);
-		sinp = 2 * (camw * camy - camz * camx);
-		if (abs(sinp) >= 1) {
-			if (sinp >= 0)
-				camey = M_PI / 2;
-			else camey = -M_PI / 2;
-		}
-		else
-			camey = asin(sinp);
-		siny_cosp = 2 * (camw * camz + camx * camy);
-		cosy_cosp = 1 - 2 * (camy * camy + camz * camz);
-		camez = atan2(siny_cosp, cosy_cosp);
+		//Target = 0;
+		//Difftime = 0;
 
 		//前
 		if (Keys.LU != 0.0 && Keys.LU >= Keys.LL && Keys.LU >= Keys.LR) {
@@ -698,6 +745,67 @@ void mian_loop() {
 						}
 					}
 					spu = *offsetPtr<int>(playeroff, 0x20F8);
+				}
+			}
+			if (*offsetPtr<int>(wepoff, 0x2e8) != 0x3 && *offsetPtr<int>(wepoff, 0x2e8) != 0x9) {
+				//空中判定
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0x7105) {
+					if (jk) {
+						jk = 0;
+						*offsetPtr<float>(actoff, 0x10c) = 37;
+					}
+					if (*offsetPtr<float>(actoff, 0x10c) >= 78) {
+						*offsetPtr<float>(actoff, 0x10c) = 40;
+					}
+				}
+				if (*offsetPtr<int>(PlayerBase, 0x1128) == 1) {
+					if ((*offsetPtr<int>(actoff, 0xe9c4) == 0xC032 && (*offsetPtr<int>(wepoff, 0x2e8) != 0x1 || *offsetPtr<int>(wepoff, 0x2e8) != 0x2))
+						||(*offsetPtr<int>(actoff, 0xe9c4) == 0xC048 && (*offsetPtr<int>(wepoff, 0x2e8) == 0x1 || *offsetPtr<int>(wepoff, 0x2e8) == 0x2)) 
+						|| *offsetPtr<int>(actoff, 0xe9c4) == 0xC033) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 5) {
+							if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+								//空中纳刀
+								*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+								//fsm_derive(1, 0xD1);
+								jk = 1;
+								fsm_derive(1, 0x2A9);
+								//*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+							}
+						}
+					}
+				}
+				else {
+					jk = 0;
+				}
+			}
+			//盾斧
+			if (*offsetPtr<int>(wepoff, 0x2e8) == 0x9) {
+				//空中判定
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0x7105) {
+					if (jk) {
+						jk = 0;
+						*offsetPtr<float>(actoff, 0x10c) = 37;
+					}
+					if (*offsetPtr<float>(actoff, 0x10c) >= 78) {
+						*offsetPtr<float>(actoff, 0x10c) = 40;
+					}
+				}
+				if (*offsetPtr<int>(PlayerBase, 0x1128) == 1) {
+					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC035 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC037) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 5) {
+							if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
+								//空中纳刀
+								*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+								//fsm_derive(1, 0xD1);
+								jk = 1;
+								fsm_derive(1, 0x2A9);
+								//*offsetPtr<int>(PlayerBase, 0x76a8) = 0;
+							}
+						}
+					}
+				}
+				else {
+					jk = 0;
 				}
 			}
 			//为太刀才生效
@@ -801,54 +909,41 @@ void mian_loop() {
 									//每个循环有一帧延迟
 									if (A_count == 7) {
 										//可以用翻滚取消大回旋
-										//前翻滚
-										if (joyl_ == 1) fsm_derive(3, 0x13);
-										//左翻滚
-										else if (joyl_ == 2) fsm_derive(3, 0x14);
-										//右翻滚
-										else if (joyl_ == 3) fsm_derive(3, 0x15);
-										//后翻滚
-										else if (joyl_ == 4) fsm_derive(3, 0x16);
-										//翻滚
-										else fsm_derive(3, 0x13);
+										if (TP == 2) {
+											if (joyl_ == 1) fsm_derive(3, 0x13); //前翻滚
+											else if (joyl_ == 2) fsm_derive(3, 0x14); //左翻滚
+											else if (joyl_ == 3) fsm_derive(3, 0x15);//右翻滚
+											else if (joyl_ == 4) fsm_derive(3, 0x16);//后翻滚
+											else fsm_derive(3, 0x13);//翻滚
+										}
+										else {
+											angle = Play_Angle();
+											if (Joy_Angle() != 0)
+											{
+												Target = Camera_Angle() - Joy_Angle();
+												if (Target > M_PI)Target -= 2 * M_PI;
+												else if (Target < -M_PI) Target += 2 * M_PI;
+												Difftime = Target - angle;
+											
+											}
+											else Difftime = 0;
+											if (abs(Difftime) > 0.2)
+											{
+												if (Difftime >= 0 && Difftime < M_PI / 2) //前翻滚
+													fsm_derive(3, 0x13);
+												else if (Difftime >= 0 && Difftime >= M_PI / 2) //左翻滚
+													fsm_derive(3, 0x14);
+												else if (Difftime < 0 && Difftime >= -M_PI / 2) //右翻滚
+													fsm_derive(3, 0x15);
+												else if (Difftime < 0 && Difftime < -M_PI / 2) //后翻滚
+													fsm_derive(3, 0x16);
+											}
+											else fsm_derive(3, 0x13); //翻滚
+										}
 										KeyA = 1;
 									}
 									std::this_thread::sleep_for(std::chrono::milliseconds(16));
 								}
-							}
-						}
-					}
-					KeyA = Keys.A;
-				}
-				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
-					/*void* Skill = *offsetPtr<void*>(PlayerSkill, 0x58);
-					if (Skill == nullptr) continue;
-					Skill = *offsetPtr<void*>(Skill, 0x30);
-					if (Skill == nullptr) continue;
-					Skill = *offsetPtr<void*>(Skill, 0x558);
-					if (Skill == nullptr) continue;
-					Skill = *offsetPtr<void*>(Skill, 0x10);
-					if (Skill == nullptr) continue;
-					else if (Skill != nullptr){
-						if (*offsetPtr<int>(Skill, 0xE58) >= 3) {
-							if (*offsetPtr<float>(actoff, 0x10c) < 15.5f)
-								*fsmp = 1.55;
-							else if (*offsetPtr<float>(actoff, 0x10c) < 80.0f)
-								*fsmp = 1.2;
-							else
-								*fsmp = 1.0;
-						}
-					}*/
-					if (KeyA <= 0) {
-						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
-							if (Keys.A > 0) {
-								//可以用翻滚取消纳刀
-								if (DS) {
-									*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
-									fsm_derive(3, 0x12);
-								}
-								else fsm_derive(1, 0x35);
-								KeyA = 1;
 							}
 						}
 					}
@@ -865,7 +960,95 @@ void mian_loop() {
 						}
 					}
 				}
-
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC165 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC16F) {
+					if (ndf > 0) {
+						frame = 0.18f;
+						angle = Play_Angle();
+						if (Joy_Angle() != 0)
+						{
+							Target = Camera_Angle() - Joy_Angle();
+							if (Target > M_PI)
+								Target -= 2 * M_PI;
+							else if (Target < -M_PI)
+								Target += 2 * M_PI;
+							Difftime = Target - angle;
+						}
+						else Difftime = 0;
+						if (abs(Difftime) > 0.2)
+						{
+							if (Difftime >= 0 && Difftime < M_PI)
+								angle += frame;
+							else if (Difftime >= 0 && Difftime >= M_PI)
+								angle -= frame;
+							else if (Difftime < 0 && Difftime >= -M_PI)
+								angle -= frame;
+							else if (Difftime < 0 && Difftime < -M_PI)
+								angle += frame;
+							if (angle > M_PI)
+								angle -= 2 * M_PI;
+							else if (angle < -M_PI)
+								angle += 2 * M_PI;
+							play_ToAngle(angle);
+						}
+						ndf--;
+					}
+				}
+				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
+					if (ndf > 0) {
+						frame = 0.18f;
+						angle = Play_Angle();
+						if (Joy_Angle() != 0)
+						{
+							Target = Camera_Angle() - Joy_Angle();
+							if (Target > M_PI)
+								Target -= 2 * M_PI;
+							else if (Target < -M_PI)
+								Target += 2 * M_PI;
+							Difftime = Target - angle;
+						}
+						else Difftime = 0;
+						if (abs(Difftime) > 0.2)
+						{
+							if (Difftime >= 0 && Difftime < M_PI)
+								angle += frame;
+							else if (Difftime >= 0 && Difftime >= M_PI)
+								angle -= frame;
+							else if (Difftime < 0 && Difftime >= -M_PI)
+								angle -= frame;
+							else if (Difftime < 0 && Difftime < -M_PI)
+								angle += frame;
+							if (angle > M_PI)
+								angle -= 2 * M_PI;
+							else if (angle < -M_PI)
+								angle += 2 * M_PI;
+							play_ToAngle(angle);
+						}
+						ndf--;
+					}
+					if (KeyA <= 0) {
+						if (*offsetPtr<float>(actoff, 0x10c) >= 100.0f) {
+							if (Keys.A > 0) {
+								//可以用翻滚取消纳刀
+								if (DS) {
+									*offsetPtr<int>(PlayerBase, 0x76a8) = 1;
+									fsm_derive(3, 0x12);
+								}
+								else fsm_derive(1, 0x35);
+								KeyA = 1;
+							}
+						}
+					}
+					KeyA = Keys.A;
+				}
+				if (*offsetPtr<int>(actoff, 0xe9c4) != 0xC132 &&
+					*offsetPtr<int>(actoff, 0xe9c4) != 0xC165 &&
+					*offsetPtr<int>(actoff, 0xe9c4) != 0xC16F &&
+					*offsetPtr<int>(actoff, 0xe9c4) != 0xC134 && 
+					*offsetPtr<int>(actoff, 0xe9c4) != 0xC135 &&
+					*offsetPtr<int>(actoff, 0xe9c4) != 0xC136 &&
+					*offsetPtr<int>(actoff, 0xe9c4) != 0xC137) {
+					ndf = 0;
+				}
 				//大居合派生控制
 				if (*offsetPtr<int>(actoff, 0xe9c4) >= 49460 && *offsetPtr<int>(actoff, 0xe9c4) <= 49463) {
 					if (iai_suc && *offsetPtr<float>(actoff, 0x10c) < 50.0f) {
@@ -885,9 +1068,12 @@ void mian_loop() {
 										if (KeyA <=0 && Keys.A > 0) {
 											input[0] = 3;
 											input[1] = 0x62;
+											ndf = 50;
+											KeyA = 1.0;
 											break;
 										}
 										if (Keys.Y > 0) {
+											ndf = 50;
 											break;
 										}
 										//每个循环有一帧延迟
@@ -934,6 +1120,14 @@ void mian_loop() {
 								}
 							}
 							//不需要居合成功的派生
+							if ((!RE && Keys.RT > 0.0) || (RE && Keys.RB > 0)) {
+								for (int RT_count = 0; RT_count < 8; RT_count++) {
+									if (Keys.Y > 0) {
+										ndf = 50;
+										break;
+									}
+								}
+							}
 							//若按下RB,则将快速纳刀存入缓冲
 							if (Keys.X > 0 || (LS && Keys.LS > 0) || (!RE && Keys.RB > 0) || (RE && Keys.RT > 0.0)) {
 								if (TK) {
@@ -982,9 +1176,9 @@ void mian_loop() {
 					*offsetPtr<int>(playeroff, 0x2d24) = 0xFFFFFFFF;
 				}
 				if (iai_suc) {
-					if(*offsetPtr<int>(actoff, 0xe9c4) == 0xC134)
+					if(*offsetPtr<int>(actoff, 0xe9c4) == 0xC134 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC135)
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xC; 
-					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC135 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC136)
+					if ( *offsetPtr<int>(actoff, 0xe9c4) == 0xC136)
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xD;
 					if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC137)
 						*offsetPtr<int>(playeroff, 0x2d24) = 0xE;
@@ -1026,6 +1220,7 @@ void mian_loop() {
 				if (RS){
 					//判定刃色
 					if (*offsetPtr<int>(playeroff, 0x2370) >= 3 && lsp >= 3) {
+						WriteProcessMemory(hprocess, (LPVOID)0x142123C1B, blade_efx, sizeof(blade_efx), NULL);
 						*offsetPtr<float>(playeroff, 0x2388) = 1;
 						if (rs) {
 							if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC08C) {
@@ -1061,6 +1256,7 @@ void mian_loop() {
 						rs = 1;
 					}
 					else {
+						WriteProcessMemory(hprocess, (LPVOID)0x142123C1B, not_blade_efx, sizeof(not_blade_efx), NULL);
 						if (rs == 1) {
 							rs = 0;
 							sbl = 3;

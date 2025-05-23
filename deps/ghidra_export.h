@@ -38,6 +38,7 @@ namespace MH {
         static undefined* (*GetPlayer)(undefined*) = (undefined * (*)(undefined*))0x141ba9280;
         //static undefined(*PlayerBasePlot)() = (undefined(*)())0x145011760;
         static undefined(*PlayerBasePlot)() = (undefined(*)())0x1450139A0;
+        static undefined(*PlayerJoy)() = (undefined(*)())0x1451CA290;
         static undefined(*PlayerText)() = (undefined(*)())0x145012EF8;
         static undefined(*PlayerSkill)() = (undefined(*)())0x1451C4400;
         static undefined(*ActionTrigger)(undefined*, uint) = (undefined(*)(undefined*, uint))0x14226E938;
