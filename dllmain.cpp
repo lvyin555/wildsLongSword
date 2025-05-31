@@ -583,7 +583,8 @@ void mian_loop() {
 	float KeyY = 1;
 	float KeyRT = 1.0;
 	int isspr = 0;
-	float angle, frame;
+	int spg = 0;
+	float angle, frame, joyAngle, camAngle;
 	float Target, Difftime;
 
 	DWORD pid;
@@ -605,11 +606,12 @@ void mian_loop() {
 	char splvup[] = { 0x8B,0x87,0x70,0x23,0x00,0x00 };
 	char blade_efx[] = { 0X0F, 0X99, 0XC3 };
 	char not_blade_efx[] = { 0X0F, 0X95, 0XC3 };
-	//AllocConsole();
-	//FILE* fileStream;
-	//freopen_s(&fileStream, "CONOUT$", "w", stdout);
-	//freopen_s(&fileStream, "CONIN$", "r", stdin);
-	//freopen_s(&fileStream, "CONOUT$", "w", stderr);
+
+	/*AllocConsole();
+	FILE* fileStream;
+	freopen_s(&fileStream, "CONOUT$", "w", stdout);
+	freopen_s(&fileStream, "CONIN$", "r", stdin);
+	freopen_s(&fileStream, "CONOUT$", "w", stderr);*/
 
 	while (1) {
 		//Ïß³ÌÃ¿ÃëÔËÐÐ60´Î,Ä£Äâ60Ö¡Ë¢ÐÂ
@@ -826,11 +828,11 @@ void mian_loop() {
 
 				//¿ÕÖÐÅÐ¶¨
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0x7105) {
-					if (jk){
+					if (jk) {
 						jk = 0;
 						*offsetPtr<float>(actoff, 0x10c) = 37;
 					}
-					if (*offsetPtr<float>(actoff, 0x10c) >= 78){
+					if (*offsetPtr<float>(actoff, 0x10c) >= 78) {
 						*offsetPtr<float>(actoff, 0x10c) = 40;
 					}
 				}
@@ -898,6 +900,9 @@ void mian_loop() {
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC06D) {
 					isspr = 1;
+					if (*offsetPtr<float>(actoff, 0x10c) < 48.0f) {
+						spg = 1;
+					}
 					if (KeyA <= 0) {
 						if (*offsetPtr<float>(actoff, 0x10c) >= 48.0f && *offsetPtr<float>(actoff, 0x10c) <= 110.0f) {
 							if (Keys.A > 0) {
@@ -917,26 +922,36 @@ void mian_loop() {
 											else fsm_derive(3, 0x13);//·­¹ö
 										}
 										else {
-											angle = Play_Angle();
-											if (Joy_Angle() != 0)
+											if (spg == 1) {
+												angle = Play_Angle();
+												joyAngle = Joy_Angle();
+												camAngle = Camera_Angle();
+												spg = 0;
+											}
+											if (joyAngle != 0)
 											{
-												Target = Camera_Angle() - Joy_Angle();
-												if (Target > M_PI)Target -= 2 * M_PI;
-												else if (Target < -M_PI) Target += 2 * M_PI;
+												Target = camAngle - joyAngle;
+												if (Target > M_PI)
+													Target -= 2 * M_PI;
+												else if (Target < -M_PI)
+													Target += 2 * M_PI;
 												Difftime = Target - angle;
-											
 											}
 											else Difftime = 0;
 											if (abs(Difftime) > 0.2)
 											{
-												if (Difftime >= 0 && Difftime < M_PI / 2) //Ç°·­¹ö
+												if (Difftime >= 0 && Difftime < M_PI / 2) { //Ç°·­¹ö
 													fsm_derive(3, 0x13);
-												else if (Difftime >= 0 && Difftime >= M_PI / 2) //×ó·­¹ö
+												}
+												else if (Difftime >= 0 && Difftime >= M_PI / 2) { //×ó·­¹ö
 													fsm_derive(3, 0x14);
-												else if (Difftime < 0 && Difftime >= -M_PI / 2) //ÓÒ·­¹ö
+												}
+												else if (Difftime < 0 && Difftime >= -M_PI / 2) { //ÓÒ·­¹ö
 													fsm_derive(3, 0x15);
-												else if (Difftime < 0 && Difftime < -M_PI / 2) //ºó·­¹ö
+												}
+												else if (Difftime < 0 && Difftime < -M_PI / 2) { //ºó·­¹ö
 													fsm_derive(3, 0x16);
+												}
 											}
 											else fsm_derive(3, 0x13); //·­¹ö
 										}
@@ -961,12 +976,16 @@ void mian_loop() {
 					}
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC165 || *offsetPtr<int>(actoff, 0xe9c4) == 0xC16F) {
-					if (ndf > 0) {
+					if (ndf == 50) {
 						frame = 0.18f;
 						angle = Play_Angle();
-						if (Joy_Angle() != 0)
+						joyAngle = Joy_Angle();
+						camAngle = Camera_Angle();
+					}
+					if (ndf > 0) {
+						if (joyAngle != 0)
 						{
-							Target = Camera_Angle() - Joy_Angle();
+							Target = camAngle - joyAngle;
 							if (Target > M_PI)
 								Target -= 2 * M_PI;
 							else if (Target < -M_PI)
@@ -994,12 +1013,16 @@ void mian_loop() {
 					}
 				}
 				if (*offsetPtr<int>(actoff, 0xe9c4) == 0xC132) {
-					if (ndf > 0) {
+					if (ndf == 50) {
 						frame = 0.18f;
 						angle = Play_Angle();
-						if (Joy_Angle() != 0)
+						joyAngle = Joy_Angle();
+						camAngle = Camera_Angle();
+					}
+					if (ndf > 0) {
+						if (joyAngle != 0)
 						{
-							Target = Camera_Angle() - Joy_Angle();
+							Target = camAngle - joyAngle;
 							if (Target > M_PI)
 								Target -= 2 * M_PI;
 							else if (Target < -M_PI)
